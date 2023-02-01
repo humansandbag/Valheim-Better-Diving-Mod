@@ -8,7 +8,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Valheim_Diving_Mod</RootNamespace>
-    <AssemblyName>ch.easy.develope.vh.diving.mod</AssemblyName>
+    <AssemblyName>MainStreetGaming.BetterDiving</AssemblyName>
     <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -73,9 +73,6 @@
     </Reference>
     <Reference Include="BepInEx.Preloader">
       <HintPath>..\Libs\BepInEx.Preloader.dll</HintPath>
-    </Reference>
-    <Reference Include="ch.easy.develope.easy.translate">
-      <HintPath>..\..\ch.easy.develope.easy.translate\ch.easy.develope.easy.translate\bin\Debug\ch.easy.develope.easy.translate.dll</HintPath>
     </Reference>
     <Reference Include="EpicLoot">
       <HintPath>..\Libs\EpicLoot.dll</HintPath>
