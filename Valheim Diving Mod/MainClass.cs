@@ -157,11 +157,11 @@ namespace Valheim_Diving_Mod
                 //breath_prog_sprite = localAssetBundle.LoadAsset<Sprite>("Square");
 
                 //Texture path relative to "plugins" BepInEx folder
-                breath_prog_tex = Jotunn.Utils.AssetUtils.LoadTexture("MainStreetGaming-BetterDiving/Assets/Image/BreathBar.png");
+                breath_prog_tex = Jotunn.Utils.AssetUtils.LoadTexture("MainStreetGaming-BetterDiving/BreathBar.png");
                 breath_prog_sprite = Sprite.Create(breath_prog_tex, new Rect(0f, 0f, breath_prog_tex.width, breath_prog_tex.height), Vector2.zero);
-                breath_bg_tex = Jotunn.Utils.AssetUtils.LoadTexture("MainStreetGaming-BetterDiving/Assets/Image/BreathBar_BG.png");
+                breath_bg_tex = Jotunn.Utils.AssetUtils.LoadTexture("MainStreetGaming-BetterDiving/BreathBar_BG.png");
                 breath_bg_sprite = Sprite.Create(breath_bg_tex, new Rect(0f, 0f, breath_bg_tex.width, breath_bg_tex.height), Vector2.zero);
-                breath_overlay_tex = Jotunn.Utils.AssetUtils.LoadTexture("MainStreetGaming-BetterDiving/Assets/Image/BreathBarOverlay.png");
+                breath_overlay_tex = Jotunn.Utils.AssetUtils.LoadTexture("MainStreetGaming-BetterDiving/BreathBarOverlay.png");
                 breath_overlay_sprite = Sprite.Create(breath_overlay_tex, new Rect(0f, 0f, breath_overlay_tex.width, breath_overlay_tex.height), Vector2.zero);
 
                 //Register DivingSkill
@@ -363,7 +363,7 @@ namespace Valheim_Diving_Mod
                 showDivingMsg = Config.Bind("GUI",
                                             "showDivingMsg",
                                             true,
-                                            "Whether or not to show the a messages when triggering/cancelling diving");
+                                            "Whether or not to show messages when triggering/cancelling diving");
 
                 divingMsg = Config.Bind("GUI",
                                             "Diving message",
@@ -376,7 +376,7 @@ namespace Valheim_Diving_Mod
                 showSurfacingMsg = Config.Bind("GUI",
                                             "showSurfacingMsg",
                                             true,
-                                            "Whether or not to show the a message when surfacing");
+                                            "Whether or not to show a message when surfacing");
 
                 surfacingMsg = Config.Bind("GUI",
                                             "Surfacing message",

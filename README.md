@@ -27,6 +27,10 @@ Copy the `MainStreetGaming-BetterDiving` folder to `<GameDirectory>/BepInEx/plug
 
 ## Changelog:
 
+### v1.0.1
+- Fixed a bug that was preventing the oxygen bar art from loading
+- Fixed grammatical errors in the config file
+
 ### v1.0.0
 - Initial release
 - Removed easytranslate references
