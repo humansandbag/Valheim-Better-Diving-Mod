@@ -13,6 +13,18 @@ This is a fork of Valheim Diving Mod by MLIMG/Easy_Develope. Special thanks go t
 - The player will gain a Diving skill while diving
 - Many options can be customized via the config file
 
+## Installation
+
+### r2Modman (recommended)
+1. Install r2modman
+2. Create a new profile
+3. Click the 'Online' button
+4. Search for 'BetterDiving' and download
+5. Click 'Start Modded'
+
+### Manual
+Copy the `MainStreetGaming-BetterDiving` folder to `<GameDirectory>/BepInEx/plugins`.
+
 ## Changelog:
 
 ### v1.0.0
