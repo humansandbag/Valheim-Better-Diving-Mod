@@ -1,5 +1,5 @@
 # Better Diving by Main Street Gaming
-This is a fork of Valheim Diving Mod by MLIMG/Easy_Develope. Special thanks go to MLIMG for creating the original mod. Since development has ceased on the original mod, I have created a fork to continue development and implement bug fixes.
+This is a fork of the Valheim Diving Mod by MLIMG/Easy_Develope. Special thanks go to MLIMG for creating the original mod. Since development has ceased on the original mod, I have created a fork to continue development and implement bug fixes.
 
 ## How It Works
 - Uses built-in Valheim keybinds, so this mod should work with custom keybinds and controllers as well
