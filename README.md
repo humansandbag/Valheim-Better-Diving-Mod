@@ -1,5 +1,8 @@
 # Better Diving by Main Street Gaming
-This is a fork of the Valheim Diving Mod by MLIMG/Easy_Develope. Special thanks go to MLIMG for creating the original mod. Since development has ceased on the original mod, I have created a fork to continue development and implement bug fixes.
+This is a fork of the Valheim Diving Mod by MLIMG/Easy_Develope. Special thanks go to MLIMG for creating the original mod. Since development has ceased on the original mod, I have created a fork to continue development and implement bug fixes. 
+
+Like this mod? Development requires a lot of coffee. Support me by buying me a coffee!  
+[![ko-fi](https://storage.ko-fi.com/cdn/kofi1.png)](https://ko-fi.com/Z8Z6IHWJT)
 
 ## How It Works
 - Uses built-in Valheim keybinds, so this mod should work with custom keybinds and controllers as well
@@ -26,6 +29,14 @@ This is a fork of the Valheim Diving Mod by MLIMG/Easy_Develope. Special thanks 
 Copy the `MainStreetGaming-BetterDiving` folder to `<GameDirectory>/BepInEx/plugins`.
 
 ## Changelog:
+
+### v1.0.2
+- WaterWalking in Epic Loot was deprecated in version 0.9.0. Removed unneeded compatability fix.
+- Removed the EpicLoot reference
+- Updated Jotunn and JotunnLib references
+- Updated Unity and Valheim references
+- Removed unused debug value restor_timer_is_running
+- Increased the oxygen bar removal delay to better match the stamina bar
 
 ### v1.0.1
 - Fixed a bug that was preventing the oxygen bar art from loading

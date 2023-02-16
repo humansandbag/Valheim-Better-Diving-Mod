@@ -16,7 +16,7 @@ namespace Valheim_Diving_Mod
 {
     namespace MainClass
     {
-        [BepInPlugin("MainStreetGaming.BetterDiving", "Valheim Better Diving", "1.0.0")]
+        [BepInPlugin("MainStreetGaming.BetterDiving", "Valheim Better Diving", "1.0.2")]
         [BepInProcess("valheim.exe")]
         [BepInDependency(Jotunn.Main.ModGuid)]
 
@@ -95,8 +95,7 @@ namespace Valheim_Diving_Mod
 
             public static float loc_remining_diveTime = 1f;
             public static bool dive_timer_is_running = false;
-            public static bool restor_timer_is_running = false;
-            public static float breathBarRemoveDelay = 1f;
+            public static float breathBarRemoveDelay = 2f;
             public static float breathDelayTimer;
             public static float highestOxygen = 1f;
             public static string last_activity = "";
@@ -128,10 +127,6 @@ namespace Valheim_Diving_Mod
 
             //Env vars
             public static string EnvName = "";
-
-            //EpicLoot vars
-            public static bool epicLootLoaded = false;
-            public static bool epicLootWaterRunning = false;
 
             //DivingSkill
             public static Skills.SkillType DivingSkillType = 0;
@@ -220,7 +215,6 @@ namespace Valheim_Diving_Mod
                     DebugLog("m_swimStaminaDrainMaxSkill" + " -> " + m_swimStaminaDrainMaxSkill);
                     DebugLog("loc_remining_diveTime" + " -> " + loc_remining_diveTime);
                     DebugLog("dive_timer_is_running" + " -> " + dive_timer_is_running);
-                    DebugLog("restor_timer_is_running" + " -> " + restor_timer_is_running);
                     DebugLog("last_activity" + " -> " + last_activity);
                     DebugLog("came_from_diving" + " -> " + came_from_diving);
                     DebugLog("has_ping_sent" + " -> " + has_ping_sent);
@@ -230,8 +224,6 @@ namespace Valheim_Diving_Mod
                     DebugLog("player_max_stamina" + " -> " + player_max_stamina);
                     DebugLog("apply_mat" + " -> " + apply_mat);
                     DebugLog("EnvName" + " -> " + EnvName);
-                    DebugLog("epicLootLoaded" + " -> " + epicLootLoaded);
-                    DebugLog("epicLootWaterRunning" + " -> " + epicLootWaterRunning);
                     DebugLog("m_diveSkillImproveTimer" + " -> " + m_diveSkillImproveTimer);
                     DebugLog("m_minDiveSkillImprover" + " -> " + m_minDiveSkillImprover);
                     DebugLog("toggleDive" + " -> " + toggleDive);
@@ -509,7 +501,8 @@ namespace Valheim_Diving_Mod
                     MainClass.DebugLog("__instance.IsPlayer()" + " -> " + __instance.IsPlayer());
 
                     //EpicLoot
-                    if (Harmony.HasAnyPatches("randyknapp.mods.epicloot") && MainClass.epicLootLoaded == false)
+                    // WaterRunning was deprecated in EpicLoot
+                    /*if (Harmony.HasAnyPatches("randyknapp.mods.epicloot") && MainClass.epicLootLoaded == false)
                     {
                         MainClass.DebugLog("epic_loot_patched_log");
                         MainClass.epicLootLoaded = true;
@@ -518,7 +511,7 @@ namespace Valheim_Diving_Mod
                     {
                         MainClass.DebugLog("epic_loot_not_patched_log");
                         
-                    }
+                    }*/
                 }
 
                 MainClass.DebugLog("----------------------Section Character Awake End-------------------------");
@@ -526,7 +519,7 @@ namespace Valheim_Diving_Mod
         }
 
         //Character awake -> setup values
-        [HarmonyPatch(typeof(Humanoid), "FixedUpdate")]
+        /*[HarmonyPatch(typeof(Humanoid), "FixedUpdate")]
         public class Humanoid_FixedUpdate
         {
             [HarmonyPrefix]
@@ -544,7 +537,7 @@ namespace Valheim_Diving_Mod
                         MainClass.epicLootWaterRunning = false;
                 }
             }
-        }
+        }*/
 
         [HarmonyPatch(typeof(Character), "OnDestroy")]
         public class Character_OnDestroy
@@ -558,7 +551,7 @@ namespace Valheim_Diving_Mod
                     MainClass.dive_timer_is_running = false;
 
                     //EpicLoot
-                    MainClass.epicLootLoaded = false;
+                    //MainClass.epicLootLoaded = false;
 
                     MainClass.DebugLog("Better Diving Mod: OnDestroy Character...");
                 }
@@ -670,7 +663,7 @@ namespace Valheim_Diving_Mod
                     bool crouchButtonDown = false;
 
                     // Toggle diving when "Crouch" button is pressed
-                    if (ZInput.GetButtonDown("Crouch") && !crouchButtonDown && __instance.InWater() && !__instance.IsOnGround() && __instance.IsSwiming() && MainClass.epicLootWaterRunning == false)
+                    if (ZInput.GetButtonDown("Crouch") && !crouchButtonDown && __instance.InWater() && !__instance.IsOnGround() && __instance.IsSwiming())
                     {
                         crouchButtonDown = true;
 
@@ -705,7 +698,7 @@ namespace Valheim_Diving_Mod
                     }
 
                     // If player can dive and has pressed the dive toggle key
-                    if (MainClass.toggleDive == true && __instance.InWater() && !__instance.IsOnGround() && __instance.IsSwiming() && MainClass.epicLootWaterRunning == false)
+                    if (MainClass.toggleDive == true && __instance.InWater() && !__instance.IsOnGround() && __instance.IsSwiming())
                     {
 
                         //Diving Skill

@@ -74,9 +74,6 @@
     <Reference Include="BepInEx.Preloader">
       <HintPath>..\Libs\BepInEx.Preloader.dll</HintPath>
     </Reference>
-    <Reference Include="EpicLoot">
-      <HintPath>..\Libs\EpicLoot.dll</HintPath>
-    </Reference>
     <Reference Include="HarmonyXInterop">
       <HintPath>..\Libs\HarmonyXInterop.dll</HintPath>
     </Reference>
@@ -227,6 +224,7 @@
     <Reference Include="UnityEngine_New">
       <HintPath>..\Libs\UnityEngine_New.dll</HintPath>
     </Reference>
+    <Reference Include="netstandard" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MainClass.cs" />
