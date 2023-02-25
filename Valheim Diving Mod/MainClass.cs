@@ -8,25 +8,21 @@ using System.IO;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
-using System.Collections.Generic;
-using Steamworks;
-using static Mono.Security.X509.X520;
 
 namespace Valheim_Diving_Mod
 {
-    namespace MainClass
+    namespace BetterDiving
     {
-        [BepInPlugin("MainStreetGaming.BetterDiving", "Valheim Better Diving", "1.0.2")]
+        [BepInPlugin("MainStreetGaming.BetterDiving", "Valheim Better Diving", "1.0.3")]
         [BepInProcess("valheim.exe")]
         [BepInDependency(Jotunn.Main.ModGuid)]
 
-        public class MainClass : BaseUnityPlugin
+        public class BetterDiving : BaseUnityPlugin
         {
             public static Harmony harmony;
 
             //config values
             public static ConfigEntry<string> configGreeting;
-
             public static ConfigEntry<bool> configDisplayGreeting;
             public static ConfigEntry<bool> showYouCanBreatheMsg;
             public static ConfigEntry<bool> showDivingMsg;
@@ -39,6 +35,7 @@ namespace Valheim_Diving_Mod
             public static ConfigEntry<float> owBIPosX;
             public static ConfigEntry<float> owBIPosY;
             public static ConfigEntry<float> breatheDrain;
+            public static ConfigEntry<bool> allowFastSwimming;
             public static ConfigEntry<float> c_swimStaminaDrainMinSkill;
             public static ConfigEntry<float> c_swimStaminaDrainMaxSkill;
             public static ConfigEntry<bool> ow_staminaRestoreValue;
@@ -75,11 +72,9 @@ namespace Valheim_Diving_Mod
 
             public static float defaultFogDensity;
 
-            public static bool reder_settings_updated_camera = true;
+            public static bool render_settings_updated_camera = true;
             public static bool set_force_env = false;
 
-            public static float sky_cam_fogd = 0f;
-            public static string env_before = "";
             public static bool has_set_render = false;
             public static float minwaterdist = 0f;
 
@@ -99,8 +94,9 @@ namespace Valheim_Diving_Mod
             public static float breathDelayTimer;
             public static float highestOxygen = 1f;
             public static string last_activity = "";
+            public static string last_dive_cancel = "";
             public static bool came_from_diving = false;
-            public static bool has_ping_sent = true;
+            public static bool is_underwater = false;
 
             public static bool has_created_breathe_bar = false;
             public static GameObject loc_breath_bar;
@@ -123,7 +119,6 @@ namespace Valheim_Diving_Mod
             public static Material water_mat;
 
             public static Material[] water_volum_list;
-            public static bool apply_mat = false;
 
             //Env vars
             public static string EnvName = "";
@@ -135,6 +130,14 @@ namespace Valheim_Diving_Mod
             public static float m_diveSkillImproveTimer = 0f;
             public static float m_minDiveSkillImprover = 0f;
 
+            //Swim speed
+            public static float baseSwimSpeed = 2f;
+            public static float maxSwimSpeed = 8f;
+            public static float fastSwimSpeedMultiplier = 0.01f;
+            public static float swimStaminaDrainRate = 10f;
+            public static float fastSwimSpeed;
+            public static float fastSwimStamDrain;
+
             public System.Collections.IEnumerator Start()
             {
                 DebugLog("Better Diving Mod: Ienumerator start!");
@@ -142,7 +145,8 @@ namespace Valheim_Diving_Mod
                 string assemblyFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
                 AssetBundle localAssetBundle = AssetBundle.LoadFromFile(assemblyFolder + "/watermat.assets");
 
-                if (localAssetBundle == null) {
+                if (localAssetBundle == null)
+                {
                     Debug.LogError("load_assets_failed");
                     return null;
                 }
@@ -160,15 +164,15 @@ namespace Valheim_Diving_Mod
                 breath_overlay_sprite = Sprite.Create(breath_overlay_tex, new Rect(0f, 0f, breath_overlay_tex.width, breath_overlay_tex.height), Vector2.zero);
 
                 //Register DivingSkill
-                MainClass.DivingSprite = Sprite.Create(dive_texture, new Rect(0f, 0f, dive_texture.width, dive_texture.height), Vector2.zero);
-                    MainClass.DivingSkillType = SkillManager.Instance.AddSkill(new SkillConfig
-                    {
-                        Identifier = "MainStreetGaming.BetterDiving.divingduration.1",
-                        Name = "Diving",
-                        Description = "Dive duration.",
-                        IncreaseStep = 0.25f,
-                        Icon = MainClass.DivingSprite
-                    });
+                BetterDiving.DivingSprite = Sprite.Create(dive_texture, new Rect(0f, 0f, dive_texture.width, dive_texture.height), Vector2.zero);
+                BetterDiving.DivingSkillType = SkillManager.Instance.AddSkill(new SkillConfig
+                {
+                    Identifier = "MainStreetGaming.BetterDiving.divingduration.1",
+                    Name = "Diving",
+                    Description = "Dive duration.",
+                    IncreaseStep = 0.25f,
+                    Icon = BetterDiving.DivingSprite
+                });
 
                 localAssetBundle.Unload(false);
                 return null;
@@ -202,10 +206,8 @@ namespace Valheim_Diving_Mod
                     DebugLog("has_set_rest_swim_depth" + " -> " + has_set_rest_swim_depth);
                     DebugLog("defaultFogColor" + " -> " + defaultFogColor);
                     DebugLog("defaultFogDensity" + " -> " + defaultFogDensity);
-                    DebugLog("reder_settings_updated_camera" + " -> " + reder_settings_updated_camera);
+                    DebugLog("render_settings_updated_camera" + " -> " + render_settings_updated_camera);
                     DebugLog("set_force_env" + " -> " + set_force_env);
-                    DebugLog("sky_cam_fogd" + " -> " + sky_cam_fogd);
-                    DebugLog("env_before" + " -> " + env_before);
                     DebugLog("has_set_render" + " -> " + has_set_render);
                     DebugLog("minwaterdist" + " -> " + minwaterdist);
                     DebugLog("has_water_flipped" + " -> " + has_water_flipped);
@@ -213,26 +215,27 @@ namespace Valheim_Diving_Mod
                     DebugLog("water_level_player" + " -> " + water_level_player);
                     DebugLog("m_swimStaminaDrainMinSkill" + " -> " + m_swimStaminaDrainMinSkill);
                     DebugLog("m_swimStaminaDrainMaxSkill" + " -> " + m_swimStaminaDrainMaxSkill);
-                    DebugLog("loc_remining_diveTime" + " -> " + loc_remining_diveTime);
                     DebugLog("dive_timer_is_running" + " -> " + dive_timer_is_running);
                     DebugLog("last_activity" + " -> " + last_activity);
                     DebugLog("came_from_diving" + " -> " + came_from_diving);
-                    DebugLog("has_ping_sent" + " -> " + has_ping_sent);
+                    DebugLog("is_underwater" + " -> " + is_underwater);
                     DebugLog("has_created_breathe_bar" + " -> " + has_created_breathe_bar);
                     DebugLog("is_take_rest_in_water" + " -> " + is_take_rest_in_water);
                     DebugLog("player_stamina_to_update" + " -> " + player_stamina_to_update);
                     DebugLog("player_max_stamina" + " -> " + player_max_stamina);
-                    DebugLog("apply_mat" + " -> " + apply_mat);
                     DebugLog("EnvName" + " -> " + EnvName);
                     DebugLog("m_diveSkillImproveTimer" + " -> " + m_diveSkillImproveTimer);
                     DebugLog("m_minDiveSkillImprover" + " -> " + m_minDiveSkillImprover);
                     DebugLog("toggleDive" + " -> " + toggleDive);
+                    DebugLog("last_dive_cancel" + " -> " + last_dive_cancel);
+                    DebugLog("fastSwimSpeed" + " -> " + fastSwimSpeed);
+                    DebugLog("fastSwimStamDrain" + " -> " + fastSwimStamDrain);
 
                     DebugLog("----------------------Section Debug End-------------------------");
 
                     DebugLog("---------------------Section Update Some Values Start------------------------");
 
-                    if(Player.m_localPlayer != null)
+                    if (Player.m_localPlayer != null)
                     {
                         player_max_stamina = Player.m_localPlayer.GetMaxStamina();
                         player_stamina_to_update = Player.m_localPlayer.GetStamina();
@@ -261,7 +264,12 @@ namespace Valheim_Diving_Mod
                                 float num = Mathf.Lerp(1f, 0.5f, skillFactor);
                                 final_dive_drain = (final_dive_drain * num) / 120f;
                                 if (final_dive_drain > final_dive_drain_one_percentage) final_dive_drain = final_dive_drain_one_percentage;
-                                
+
+                                if (ZInput.GetButton("Run") && allowFastSwimming.Value == true)
+                                {
+                                    final_dive_drain *= 2f;
+                                }
+
                                 loc_remining_diveTime -= final_dive_drain;
 
                                 DebugLog("skillFactor" + " -> " + skillFactor);
@@ -301,7 +309,7 @@ namespace Valheim_Diving_Mod
                                 DebugLog("final_dive_drain" + " -> " + final_dive_drain);
                             }
                         }
-        
+
                     }
 
                     DebugLog("is_take_rest_in_water" + " -> " + is_take_rest_in_water);
@@ -310,7 +318,7 @@ namespace Valheim_Diving_Mod
                     {
                         if (player_stamina_to_update < player_max_stamina)
                         {
-                            if(ow_staminaRestoreValue.Value == true)
+                            if (ow_staminaRestoreValue.Value == true)
                             {
                                 player_stamina_to_update += ow_staminaRestorPerTick.Value;
 
@@ -378,6 +386,11 @@ namespace Valheim_Diving_Mod
                                            "allowRestInWater",
                                            true,
                                            "Whether or not to allow stamina regen in water when able to breath and not moving");
+
+                allowFastSwimming = Config.Bind("GUI",
+                           "allowFastSwimming",
+                           true,
+                           "Allow fast swimming when holding the Run button");
 
                 owBIPos = Config.Bind("GUI",
                                            "owBIPos",
@@ -460,19 +473,19 @@ namespace Valheim_Diving_Mod
 
             void Update()
             {
-                if(MainClass.loc_breath_bar != null)
+                if (BetterDiving.loc_breath_bar != null)
                 {
-                    if (MainClass.owBIPos.Value == true) MainClass.loc_breath_bar_bg.transform.position = new Vector3(MainClass.owBIPosX.Value, MainClass.owBIPosY.Value, Hud.instance.transform.position.y);
-                    if (MainClass.owBIPos.Value == true) MainClass.loc_depleted_breath.transform.position = new Vector3(MainClass.owBIPosX.Value, MainClass.owBIPosY.Value, Hud.instance.transform.position.y);
-                    if (MainClass.owBIPos.Value == true) MainClass.loc_breath_bar.transform.position = new Vector3(MainClass.owBIPosX.Value, MainClass.owBIPosY.Value, Hud.instance.transform.position.y);
-                    if (MainClass.owBIPos.Value == true) MainClass.loc_breathe_overlay.transform.position = new Vector3(MainClass.owBIPosX.Value, MainClass.owBIPosY.Value, Hud.instance.transform.position.y);
+                    if (BetterDiving.owBIPos.Value == true) BetterDiving.loc_breath_bar_bg.transform.position = new Vector3(BetterDiving.owBIPosX.Value, BetterDiving.owBIPosY.Value, Hud.instance.transform.position.y);
+                    if (BetterDiving.owBIPos.Value == true) BetterDiving.loc_depleted_breath.transform.position = new Vector3(BetterDiving.owBIPosX.Value, BetterDiving.owBIPosY.Value, Hud.instance.transform.position.y);
+                    if (BetterDiving.owBIPos.Value == true) BetterDiving.loc_breath_bar.transform.position = new Vector3(BetterDiving.owBIPosX.Value, BetterDiving.owBIPosY.Value, Hud.instance.transform.position.y);
+                    if (BetterDiving.owBIPos.Value == true) BetterDiving.loc_breathe_overlay.transform.position = new Vector3(BetterDiving.owBIPosX.Value, BetterDiving.owBIPosY.Value, Hud.instance.transform.position.y);
                 }
             }
 
             //Env
             public static bool isEnvAllowed()
             {
-                if (MainClass.EnvName == "SunkenCrypt") return false;
+                if (BetterDiving.EnvName == "SunkenCrypt") return false;
 
                 return true;
             }
@@ -480,7 +493,7 @@ namespace Valheim_Diving_Mod
             //Debug
             public static void DebugLog(string data)
             {
-                if(doDebug.Value) Debug.Log("Better Diving Mod: " + data);
+                if (doDebug.Value) Debug.Log("Better Diving Mod: " + data);
             }
         }
 
@@ -491,30 +504,30 @@ namespace Valheim_Diving_Mod
             [HarmonyPrefix]
             public static void Prefix(Character __instance)
             {
-                MainClass.DebugLog("---------------------Section Character Awake Start------------------------");
-                MainClass.DebugLog("__instance.IsPlayer()" + " -> " + __instance.IsPlayer());
+                BetterDiving.DebugLog("---------------------Section Character Awake Start------------------------");
+                BetterDiving.DebugLog("__instance.IsPlayer()" + " -> " + __instance.IsPlayer());
 
                 if (__instance.IsPlayer())
                 {
                     __instance.m_swimDepth = 1.6f;
-                    MainClass.loc_m_player_dist = __instance.m_swimDepth;
-                    MainClass.DebugLog("__instance.IsPlayer()" + " -> " + __instance.IsPlayer());
+                    BetterDiving.loc_m_player_dist = __instance.m_swimDepth;
+                    BetterDiving.DebugLog("__instance.IsPlayer()" + " -> " + __instance.IsPlayer());
 
                     //EpicLoot
                     // WaterRunning was deprecated in EpicLoot
-                    /*if (Harmony.HasAnyPatches("randyknapp.mods.epicloot") && MainClass.epicLootLoaded == false)
+                    /*if (Harmony.HasAnyPatches("randyknapp.mods.epicloot") && BetterDiving.epicLootLoaded == false)
                     {
-                        MainClass.DebugLog("epic_loot_patched_log");
-                        MainClass.epicLootLoaded = true;
+                        BetterDiving.DebugLog("epic_loot_patched_log");
+                        BetterDiving.epicLootLoaded = true;
                     }
-                    else if(MainClass.epicLootLoaded == false)
+                    else if(BetterDiving.epicLootLoaded == false)
                     {
-                        MainClass.DebugLog("epic_loot_not_patched_log");
+                        BetterDiving.DebugLog("epic_loot_not_patched_log");
                         
                     }*/
                 }
 
-                MainClass.DebugLog("----------------------Section Character Awake End-------------------------");
+                BetterDiving.DebugLog("----------------------Section Character Awake End-------------------------");
             }
         }
 
@@ -525,16 +538,16 @@ namespace Valheim_Diving_Mod
             [HarmonyPrefix]
             public static void Prefix(Humanoid __instance, ItemDrop.ItemData ___m_legItem)
             {
-                if (Hud.instance != null && ___m_legItem != null && __instance.IsPlayer() && MainClass.epicLootLoaded && ___m_legItem.GetTooltip().Contains("_epicloot_me_waterwalk_"))
+                if (Hud.instance != null && ___m_legItem != null && __instance.IsPlayer() && BetterDiving.epicLootLoaded && ___m_legItem.GetTooltip().Contains("_epicloot_me_waterwalk_"))
                 {
-                    if(MainClass.epicLootWaterRunning == false)
+                    if(BetterDiving.epicLootWaterRunning == false)
                     {
                         Debug.Log("Better Diving Mod: " + "water_walking_on_log");
-                        MainClass.epicLootWaterRunning = true;
+                        BetterDiving.epicLootWaterRunning = true;
                     }
-                } else if (MainClass.epicLootWaterRunning == true) {
+                } else if (BetterDiving.epicLootWaterRunning == true) {
                         Debug.Log("Better Diving Mod: " + "water_walking_off_log");
-                        MainClass.epicLootWaterRunning = false;
+                        BetterDiving.epicLootWaterRunning = false;
                 }
             }
         }*/
@@ -547,15 +560,15 @@ namespace Valheim_Diving_Mod
             {
                 if (__instance.IsPlayer())
                 {
-                    MainClass.has_created_breathe_bar = false;
-                    MainClass.dive_timer_is_running = false;
+                    BetterDiving.has_created_breathe_bar = false;
+                    BetterDiving.dive_timer_is_running = false;
 
                     //EpicLoot
-                    //MainClass.epicLootLoaded = false;
+                    //BetterDiving.epicLootLoaded = false;
 
-                    MainClass.DebugLog("Better Diving Mod: OnDestroy Character...");
+                    BetterDiving.DebugLog("Better Diving Mod: OnDestroy Character...");
                 }
-                
+
             }
         }
 
@@ -567,16 +580,16 @@ namespace Valheim_Diving_Mod
             {
                 if (Player.m_localPlayer)
                 {
-                    MainClass.is_diving = false;
-                    MainClass.is_swimming = false;
+                    BetterDiving.is_diving = false;
+                    BetterDiving.is_swimming = false;
 
                     //Bug fix for breath bar getting stuck active after player death until logoff
-                    MainClass.loc_breath_bar_bg.SetActive(false);
-                    MainClass.loc_depleted_breath.SetActive(false);
-                    MainClass.loc_breath_bar.SetActive(false);
-                    MainClass.loc_breathe_overlay.SetActive(false);
+                    BetterDiving.loc_breath_bar_bg.SetActive(false);
+                    BetterDiving.loc_depleted_breath.SetActive(false);
+                    BetterDiving.loc_breath_bar.SetActive(false);
+                    BetterDiving.loc_breathe_overlay.SetActive(false);
 
-                    MainClass.DebugLog("Better Diving Mod: OnDeath...");
+                    BetterDiving.DebugLog("Better Diving Mod: OnDeath...");
                 }
 
             }
@@ -588,59 +601,63 @@ namespace Valheim_Diving_Mod
             [HarmonyPrefix]
             public static void Prefix(Character __instance, ref float ___m_lastGroundTouch, ref float ___m_swimTimer)
             {
-                if (__instance.IsPlayer() && MainClass.isEnvAllowed())
+                if (__instance.IsPlayer() && BetterDiving.isEnvAllowed())
                 {
                     // Bug fix for swimming on land glitch - originally __instance.m_swimDepth > 2.5f
                     if (__instance.m_swimDepth > 2.5f && (Mathf.Max(0f, __instance.GetLiquidLevel() - __instance.transform.position.y) > 2.5f))
                     {
-                        MainClass.is_diving = true;
-                        MainClass.has_ping_sent = false;
+                        BetterDiving.is_diving = true;
+                        BetterDiving.is_underwater = true;
                         ___m_lastGroundTouch = 0.3f;
                         ___m_swimTimer = 0f;
                     }
                     else
                     {
-                        MainClass.is_diving = false;
+                        BetterDiving.is_diving = false;
 
                         // Fix for oxygen bar bug. Remove the bar if full.
-                        if (MainClass.loc_remining_diveTime >= 1f)
+                        if (BetterDiving.loc_remining_diveTime >= 1f)
                         {
-                            MainClass.breathDelayTimer += Time.deltaTime;
+                            BetterDiving.breathDelayTimer += Time.deltaTime;
 
                             // Delay removal of the breathe bar for a number of seconds
-                            if (MainClass.breathDelayTimer >= MainClass.breathBarRemoveDelay)
+                            if (BetterDiving.breathDelayTimer >= BetterDiving.breathBarRemoveDelay)
                             {
-                                MainClass.loc_breath_bar_bg.SetActive(false);
-                                MainClass.loc_depleted_breath.SetActive(false);
-                                MainClass.loc_breath_bar.SetActive(false);
-                                MainClass.loc_breathe_overlay.SetActive(false);
-                                MainClass.breathDelayTimer = 0;
+                                BetterDiving.loc_breath_bar_bg.SetActive(false);
+                                BetterDiving.loc_depleted_breath.SetActive(false);
+                                BetterDiving.loc_breath_bar.SetActive(false);
+                                BetterDiving.loc_breathe_overlay.SetActive(false);
+                                BetterDiving.breathDelayTimer = 0;
                             }
                         }
-                        else 
+                        else
                         {
                             // Amount of delay before removing the breath bar
-                            MainClass.breathDelayTimer = 0;
+                            BetterDiving.breathDelayTimer = 0;
                         }
 
-                        if (MainClass.has_ping_sent == false && __instance.GetStandingOnShip() == null)
+                        if (BetterDiving.is_underwater == true && __instance.GetStandingOnShip() == null)
                         {
-                            if ( !__instance.IsDead() && MainClass.showYouCanBreatheMsg.Value == true)
+                            if (!__instance.IsDead() && BetterDiving.showYouCanBreatheMsg.Value == true)
                             {
-                                    __instance.Message(MessageHud.MessageType.Center, "You can breath now.");
+                                __instance.Message(MessageHud.MessageType.Center, "You can breath now.");
                             }
 
-                            MainClass.toggleDive = false;
-                            
-                            if (!__instance.IsDead() && MainClass.showSurfacingMsg.Value == true)
+                            BetterDiving.toggleDive = false;
+
+                            //DEBUG
+                            //__instance.Message(MessageHud.MessageType.Center, "Cancelled 1");
+                            BetterDiving.last_dive_cancel = "PlayerSurfaced";
+
+                            if (!__instance.IsDead() && BetterDiving.showSurfacingMsg.Value == true)
                             {
-                                __instance.Message(MessageHud.MessageType.Center, MainClass.surfacingMsg.Value);
+                                __instance.Message(MessageHud.MessageType.Center, BetterDiving.surfacingMsg.Value);
                             }
 
-                            MainClass.has_ping_sent = true;
+                            BetterDiving.is_underwater = false;
                         }
                     }
-                    MainClass.loc_m_player_dist = __instance.m_swimDepth;
+                    BetterDiving.loc_m_player_dist = __instance.m_swimDepth;
                 }
             }
         }
@@ -652,7 +669,7 @@ namespace Valheim_Diving_Mod
             [HarmonyPrefix]
             public static void Prefix(Character __instance, ref Vector3 ___m_moveDir, ref Vector3 ___m_lookDir, ref float ___m_lastGroundTouch, ref bool ___m_walking, ref bool ___m_wallRunning, ref bool ___m_sliding, ref bool ___m_running, ref float ___m_swimTimer)
             {
-                if (__instance.IsPlayer() && MainClass.isEnvAllowed())
+                if (__instance.IsPlayer() && BetterDiving.isEnvAllowed())
                 {
 
                     if (!__instance.InWater())
@@ -667,22 +684,27 @@ namespace Valheim_Diving_Mod
                     {
                         crouchButtonDown = true;
 
-                        if (MainClass.toggleDive == false)
+                        if (BetterDiving.toggleDive == false)
                         {
-                            MainClass.toggleDive = true;
+                            BetterDiving.toggleDive = true;
+                            BetterDiving.last_dive_cancel = "None";
 
-                            if (MainClass.showDivingMsg.Value == true)
+                            if (BetterDiving.showDivingMsg.Value == true)
                             {
-                                __instance.Message(MessageHud.MessageType.Center, MainClass.divingMsg.Value);
+                                __instance.Message(MessageHud.MessageType.Center, BetterDiving.divingMsg.Value);
                             }
                         }
                         //Cancel diving if button is pressed again and still near the surface
-                        else if (MainClass.toggleDive == true && __instance.m_swimDepth <= 2.5f)
+                        else if (BetterDiving.toggleDive == true && __instance.m_swimDepth <= 2.5f)
                         {
-                            MainClass.toggleDive = false;
-                            if (MainClass.showDivingMsg.Value == true)
+                            BetterDiving.toggleDive = false;
+                            //DEBUG
+                            //__instance.Message(MessageHud.MessageType.Center, "Cancelled 2");
+                            BetterDiving.last_dive_cancel = "PlayerCancelled";
+
+                            if (BetterDiving.showDivingMsg.Value == true)
                             {
-                                __instance.Message(MessageHud.MessageType.Center, MainClass.divingCancelledMsg.Value);
+                                __instance.Message(MessageHud.MessageType.Center, BetterDiving.divingCancelledMsg.Value);
                             }
                         }
                     }
@@ -692,38 +714,41 @@ namespace Valheim_Diving_Mod
                     }
 
                     //Cancel diving if player is on land
-                    if ( __instance.IsOnGround() || !__instance.IsSwiming() || !__instance.InWater())
+                    if (__instance.IsOnGround() || !__instance.IsSwiming() || !__instance.InWater())
                     {
-                        MainClass.toggleDive = false;
+                        BetterDiving.toggleDive = false;
+                        //DEBUG
+                        //__instance.Message(MessageHud.MessageType.Center, "Cancelled 3");
+                        BetterDiving.last_dive_cancel = "PlayerOnLand";
                     }
 
                     // If player can dive and has pressed the dive toggle key
-                    if (MainClass.toggleDive == true && __instance.InWater() && !__instance.IsOnGround() && __instance.IsSwiming())
+                    if (BetterDiving.toggleDive == true && __instance.InWater() && !__instance.IsOnGround() && __instance.IsSwiming())
                     {
 
                         //Diving Skill
                         if (Player.m_localPlayer != null && __instance.m_swimDepth > 2.5f)
                         {
-                            MainClass.m_diveSkillImproveTimer += Time.deltaTime;
+                            BetterDiving.m_diveSkillImproveTimer += Time.deltaTime;
 
-                            if (MainClass.m_diveSkillImproveTimer > 1f)
+                            if (BetterDiving.m_diveSkillImproveTimer > 1f)
                             {
-                                MainClass.m_diveSkillImproveTimer = 0f;
-                                Player.m_localPlayer.RaiseSkill(MainClass.DivingSkillType, 0.25f);
+                                BetterDiving.m_diveSkillImproveTimer = 0f;
+                                Player.m_localPlayer.RaiseSkill(BetterDiving.DivingSkillType, 0.25f);
                             }
                         }
 
-                        MainClass.character_pos = __instance.transform.position;
-                        MainClass.char_swim_depth = __instance.m_swimDepth;
+                        BetterDiving.character_pos = __instance.transform.position;
+                        BetterDiving.char_swim_depth = __instance.m_swimDepth;
 
                         float multiplier = 0f;
                         if (___m_lookDir.y < -0.25)
                         {
-                            MainClass.loc_m_diveAaxis = 1;
+                            BetterDiving.loc_m_diveAaxis = 1;
                         }
                         if (___m_lookDir.y > 0.15)
                         {
-                            MainClass.loc_m_diveAaxis = 0;
+                            BetterDiving.loc_m_diveAaxis = 0;
                         }
 
                         multiplier = (___m_lookDir.y * ___m_lookDir.y) * 0.25f;
@@ -738,11 +763,11 @@ namespace Valheim_Diving_Mod
                                 multiplier = 0f;
                             }
 
-                            if (MainClass.loc_m_diveAaxis == 1)
+                            if (BetterDiving.loc_m_diveAaxis == 1)
                             {
                                 __instance.m_swimDepth += multiplier;
                             }
-                            if (MainClass.loc_m_diveAaxis == 0)
+                            if (BetterDiving.loc_m_diveAaxis == 0)
                             {
                                 if (__instance.m_swimDepth > 1.6f)
                                 {
@@ -783,10 +808,10 @@ namespace Valheim_Diving_Mod
                             }
                         }*/
 
-                    } 
+                    }
                     else
                     {
-                        if((__instance.IsOnGround()  || MainClass.is_diving == false) && !MainClass.is_take_rest_in_water)
+                        if ((__instance.IsOnGround() || BetterDiving.is_diving == false) && !BetterDiving.is_take_rest_in_water)
                         {
                             __instance.m_swimDepth = 1.6f;
                         }
@@ -795,74 +820,124 @@ namespace Valheim_Diving_Mod
             }
         }
 
+        //Swim speed and stamina drain
+        [HarmonyPatch(typeof(Character), "UpdateSwiming")]
+        class Character_UpdateSwiming_Patch
+        {
+            static void Prefix(Character __instance)
+            {
+                if (!__instance.IsPlayer() || !BetterDiving.allowFastSwimming.Value)
+                    return;
+
+                //Swim speed
+                float swimSkill = __instance.GetSkillFactor(Skills.SkillType.Swim);
+                float swimSkillFactor = swimSkill * 100f;
+                float sprintSwimEnhancement = (BetterDiving.fastSwimSpeedMultiplier * swimSkillFactor) + 1;
+                BetterDiving.fastSwimSpeed = BetterDiving.baseSwimSpeed + sprintSwimEnhancement;
+
+                //Stamina
+                float swimStaminaFactor = swimSkill / 100f;
+                float maxStaminaDrainReduction = 0.5f; //0.5
+                float staminaDrainReduction = maxStaminaDrainReduction * swimStaminaFactor;
+                float skillDrainMultiplier = 0.1f;//0.5
+                float skillDrainPenalty = skillDrainMultiplier * swimSkill;
+                float totalDrainReduction = staminaDrainReduction + skillDrainPenalty;
+                float baseDrainFactor = 0.5f;
+                float staminaDrainFactor = baseDrainFactor - totalDrainReduction;
+                float staminaDrainRate = (BetterDiving.swimStaminaDrainRate * staminaDrainFactor * 2f) + 5f;
+                BetterDiving.fastSwimStamDrain = staminaDrainRate;
+
+                if (ZInput.GetButton("Run"))
+                {
+                    if (!BetterDiving.is_underwater)
+                    {
+                        float staminaCost = Time.deltaTime * staminaDrainRate;
+                        __instance.UseStamina(staminaCost);
+                    }
+                    __instance.m_swimSpeed = BetterDiving.fastSwimSpeed;
+
+                    //DEBUG
+                    //__instance.Message(MessageHud.MessageType.Center, "Swimming faster");
+                }
+                else
+                {
+                    __instance.m_swimSpeed = BetterDiving.baseSwimSpeed;
+
+                    //DEBUG
+                    //__instance.Message(MessageHud.MessageType.Center, "Swimming slow");
+                }
+            }
+        }
+
+
         //Update Breathing indicator
         [HarmonyPatch(typeof(Player), "Update")]
         public class Player_Update
         {
             [HarmonyPrefix]
-            public static void Prefix(Player __instance, ref float ___m_stamina, ref float ___m_maxStamina) 
+            public static void Prefix(Player __instance, ref float ___m_stamina, ref float ___m_maxStamina)
             {
                 if (Player.m_localPlayer)
                 {
                     //Remove the breath bar if the player is dead
                     if (Player.m_localPlayer.IsDead())
                     {
-                        MainClass.loc_breath_bar_bg.SetActive(false);
-                        MainClass.loc_depleted_breath.SetActive(false);
-                        MainClass.loc_breath_bar.SetActive(false);
-                        MainClass.loc_breathe_overlay.SetActive(false);
+                        BetterDiving.loc_breath_bar_bg.SetActive(false);
+                        BetterDiving.loc_depleted_breath.SetActive(false);
+                        BetterDiving.loc_breath_bar.SetActive(false);
+                        BetterDiving.loc_breathe_overlay.SetActive(false);
                     }
 
-                    MainClass.player_max_stamina = ___m_maxStamina;
+                    BetterDiving.player_max_stamina = ___m_maxStamina;
 
-                    if (ZInput.GetButtonDown("Forward") || ZInput.GetButtonDown("Backward") || ZInput.GetButtonDown("Left") || ZInput.GetButtonDown("Right") || MainClass.toggleDive == true)
+                    if (Player.m_localPlayer.GetVelocity().magnitude >= 1.0f || BetterDiving.toggleDive == true || !Player.m_localPlayer.InWater() || !Player.m_localPlayer.IsSwiming())
                     {
-                        MainClass.is_take_rest_in_water = false;
+                        BetterDiving.is_take_rest_in_water = false;
                     }
 
-                    if (MainClass.is_take_rest_in_water == false)
+                    if (BetterDiving.is_take_rest_in_water == false)
                     {
-                        if (MainClass.is_diving && MainClass.loc_remining_diveTime <= 0f)
+                        if (BetterDiving.is_diving && BetterDiving.loc_remining_diveTime <= 0f)
                         {
-                            if (___m_stamina > MainClass.player_stamina_to_update && ___m_stamina != 0)
+                            if (___m_stamina > BetterDiving.player_stamina_to_update && ___m_stamina != 0)
                             {
-                                ___m_stamina = MainClass.player_stamina_to_update;
+                                ___m_stamina = BetterDiving.player_stamina_to_update;
                             }
                         }
                     }
 
-                    if (MainClass.is_take_rest_in_water) ___m_stamina = MainClass.player_stamina_to_update;
+                    if (BetterDiving.is_take_rest_in_water) ___m_stamina = BetterDiving.player_stamina_to_update;
 
                     //Bug fix for negative stamina bug
                     if (___m_stamina < 0f) ___m_stamina = 0f;
 
 
-                    if (MainClass.is_swimming != Player.m_localPlayer.IsSwiming()) MainClass.is_swimming = Player.m_localPlayer.IsSwiming();
+                    if (BetterDiving.is_swimming != Player.m_localPlayer.IsSwiming()) BetterDiving.is_swimming = Player.m_localPlayer.IsSwiming();
 
-                    if (MainClass.m_swimStaminaDrainMaxSkill == 0f)
+                    if (BetterDiving.m_swimStaminaDrainMaxSkill == 0f)
                     {
-                        MainClass.m_swimStaminaDrainMaxSkill = Player.m_localPlayer.m_swimStaminaDrainMaxSkill;
+                        BetterDiving.m_swimStaminaDrainMaxSkill = Player.m_localPlayer.m_swimStaminaDrainMaxSkill;
                     }
-                    if (MainClass.m_swimStaminaDrainMinSkill == 0f)
+                    if (BetterDiving.m_swimStaminaDrainMinSkill == 0f)
                     {
-                        MainClass.m_swimStaminaDrainMinSkill = Player.m_localPlayer.m_swimStaminaDrainMinSkill;
+                        BetterDiving.m_swimStaminaDrainMinSkill = Player.m_localPlayer.m_swimStaminaDrainMinSkill;
                     }
-                    if (MainClass.is_diving && MainClass.is_swimming)
+                    if (BetterDiving.is_diving && BetterDiving.is_swimming)
                     {
-                        if (MainClass.m_swimStaminaDrainMaxSkill != MainClass.c_swimStaminaDrainMaxSkill.Value)
+                        if (BetterDiving.m_swimStaminaDrainMaxSkill != BetterDiving.c_swimStaminaDrainMaxSkill.Value)
                         {
-                            Player.m_localPlayer.m_swimStaminaDrainMaxSkill = MainClass.c_swimStaminaDrainMaxSkill.Value;
+                            Player.m_localPlayer.m_swimStaminaDrainMaxSkill = BetterDiving.c_swimStaminaDrainMaxSkill.Value;
                         }
-                        if (MainClass.m_swimStaminaDrainMinSkill != MainClass.c_swimStaminaDrainMinSkill.Value)
+                        if (BetterDiving.m_swimStaminaDrainMinSkill != BetterDiving.c_swimStaminaDrainMinSkill.Value)
                         {
-                            Player.m_localPlayer.m_swimStaminaDrainMinSkill = MainClass.c_swimStaminaDrainMinSkill.Value;
+                            Player.m_localPlayer.m_swimStaminaDrainMinSkill = BetterDiving.c_swimStaminaDrainMinSkill.Value;
                         }
 
-                        MainClass.last_activity = "diving";
-                        MainClass.came_from_diving = true;
+                        BetterDiving.last_activity = "diving";
+                        BetterDiving.came_from_diving = true;
 
                         bool minimapOpen = false;
-                        if(Minimap.instance != null && Minimap.IsOpen())
+                        if (Minimap.instance != null && Minimap.IsOpen())
                         {
                             minimapOpen = true;
                         }
@@ -879,21 +954,22 @@ namespace Valheim_Diving_Mod
                             menuOpen = true;
                         }
 
-                        if (MainClass.loc_breath_bar != null && Hud.instance != null && MainClass.has_created_breathe_bar == true && !MainClass.loc_breath_bar.activeSelf && !minimapOpen && !inventoryOpen && !menuOpen)
+                        if (BetterDiving.loc_breath_bar != null && Hud.instance != null && BetterDiving.has_created_breathe_bar == true && !BetterDiving.loc_breath_bar.activeSelf && !minimapOpen && !inventoryOpen && !menuOpen)
                         {
-                            MainClass.loc_breath_bar_bg.SetActive(true);
-                            MainClass.loc_depleted_breath.SetActive(true);
-                            MainClass.loc_breath_bar.SetActive(true);
-                            MainClass.loc_breathe_overlay.SetActive(true);
-                        } else
+                            BetterDiving.loc_breath_bar_bg.SetActive(true);
+                            BetterDiving.loc_depleted_breath.SetActive(true);
+                            BetterDiving.loc_breath_bar.SetActive(true);
+                            BetterDiving.loc_breathe_overlay.SetActive(true);
+                        }
+                        else
                         {
-                            if(MainClass.loc_breath_bar != null && Hud.instance != null && MainClass.has_created_breathe_bar == true && MainClass.loc_breath_bar.activeSelf && (minimapOpen || inventoryOpen || menuOpen))
+                            if (BetterDiving.loc_breath_bar != null && Hud.instance != null && BetterDiving.has_created_breathe_bar == true && BetterDiving.loc_breath_bar.activeSelf && (minimapOpen || inventoryOpen || menuOpen))
                             {
-                                
-                                MainClass.loc_breath_bar_bg.SetActive(false);
-                                MainClass.loc_depleted_breath.SetActive(false);
-                                MainClass.loc_breath_bar.SetActive(false);
-                                MainClass.loc_breathe_overlay.SetActive(false);
+
+                                BetterDiving.loc_breath_bar_bg.SetActive(false);
+                                BetterDiving.loc_depleted_breath.SetActive(false);
+                                BetterDiving.loc_breath_bar.SetActive(false);
+                                BetterDiving.loc_breathe_overlay.SetActive(false);
                             }
                         }
                     }
@@ -901,80 +977,82 @@ namespace Valheim_Diving_Mod
                     {
                         if (Player.m_localPlayer.IsSwiming())
                         {
-                            if (!ZInput.GetButton("Forward") && !ZInput.GetButton("Backward") && !ZInput.GetButton("Left") && !ZInput.GetButton("Right") && !MainClass.toggleDive)
+                            if (Player.m_localPlayer.GetVelocity().magnitude < 1.0f && !BetterDiving.toggleDive)
                             {
-                                //MainClass.loc_remining_diveTime = 1f;
+                                //BetterDiving.loc_remining_diveTime = 1f;
 
-                                if (MainClass.allowRestInWater.Value == true)
+                                if (BetterDiving.allowRestInWater.Value == true)
                                 {
                                     //Begin resting if player is not moving or diving
-                                    MainClass.is_take_rest_in_water = true;
+                                    BetterDiving.is_take_rest_in_water = true;
                                     //__instance.Message(MessageHud.MessageType.Center, "Resting enabled.");
                                 }
                             }
-                            else if (ZInput.GetButtonDown("Forward") || ZInput.GetButtonDown("Backward") || ZInput.GetButtonDown("Left") || ZInput.GetButtonDown("Right") && MainClass.toggleDive == true)
+                            else if (Player.m_localPlayer.GetVelocity().magnitude >= 1.0f || BetterDiving.toggleDive == true)
                             {
-                                    MainClass.came_from_diving = false;
-                                    MainClass.last_activity = "swimming";
-                                    //Stop resting if player is moving or diving
-                                    MainClass.is_take_rest_in_water = false;
-                                    //__instance.Message(MessageHud.MessageType.Center, "Resting disabled.");
+                                BetterDiving.came_from_diving = false;
+                                BetterDiving.last_activity = "swimming";
+                                //Stop resting if player is moving or diving
+                                BetterDiving.is_take_rest_in_water = false;
+                                //__instance.Message(MessageHud.MessageType.Center, "Resting disabled.");
                             }
-                            if (Player.m_localPlayer.m_swimStaminaDrainMaxSkill == MainClass.c_swimStaminaDrainMaxSkill.Value)
+                            if (Player.m_localPlayer.m_swimStaminaDrainMaxSkill == BetterDiving.c_swimStaminaDrainMaxSkill.Value)
                             {
-                                Player.m_localPlayer.m_swimStaminaDrainMaxSkill = MainClass.m_swimStaminaDrainMaxSkill;
-                                Player.m_localPlayer.m_swimStaminaDrainMinSkill = MainClass.m_swimStaminaDrainMinSkill;
+                                Player.m_localPlayer.m_swimStaminaDrainMaxSkill = BetterDiving.m_swimStaminaDrainMaxSkill;
+                                Player.m_localPlayer.m_swimStaminaDrainMinSkill = BetterDiving.m_swimStaminaDrainMinSkill;
                             }
                         }
                         //Hides the healthbar immediately when on land
-                        /*else if (MainClass.loc_breath_bar != null && Hud.instance != null && MainClass.has_created_breathe_bar == true && MainClass.loc_breath_bar.activeSelf)
+                        /*else if (BetterDiving.loc_breath_bar != null && Hud.instance != null && BetterDiving.has_created_breathe_bar == true && BetterDiving.loc_breath_bar.activeSelf)
                         {
-                            MainClass.loc_breath_bar_bg.SetActive(false);
-                            MainClass.loc_depleted_breath.SetActive(false);
-                            MainClass.loc_breath_bar.SetActive(false);
-                            MainClass.loc_breathe_overlay.SetActive(false);
+                            BetterDiving.loc_breath_bar_bg.SetActive(false);
+                            BetterDiving.loc_depleted_breath.SetActive(false);
+                            BetterDiving.loc_breath_bar.SetActive(false);
+                            BetterDiving.loc_breathe_overlay.SetActive(false);
                         }*/
                     }
-                    if (MainClass.loc_breath_bar != null && Hud.instance != null && MainClass.has_created_breathe_bar == true && MainClass.loc_breath_bar.activeSelf)
+                    if (BetterDiving.loc_breath_bar != null && Hud.instance != null && BetterDiving.has_created_breathe_bar == true && BetterDiving.loc_breath_bar.activeSelf)
                     {
                         //Set the bar fill amount based on divetime remaining
 
                         //Smoothly fill/deplete the breath bar
-                        MainClass.loc_breath_bar.GetComponent<Image>().fillAmount = Mathf.Lerp(MainClass.loc_breath_bar.GetComponent<Image>().fillAmount, MainClass.loc_remining_diveTime, Time.deltaTime);
+                        BetterDiving.loc_breath_bar.GetComponent<Image>().fillAmount = Mathf.Lerp(BetterDiving.loc_breath_bar.GetComponent<Image>().fillAmount, BetterDiving.loc_remining_diveTime, Time.deltaTime);
 
                         float barMultiplier = 1.5f;
 
-                        if (!MainClass.is_diving)
+                        if (!BetterDiving.is_diving)
                         {
                             // Smoothly deplete gray bar
-                            if (MainClass.loc_depleted_breath.GetComponent<Image>().fillAmount >= MainClass.loc_remining_diveTime) {
-                                MainClass.loc_depleted_breath.GetComponent<Image>().fillAmount = Mathf.Lerp(MainClass.loc_depleted_breath.GetComponent<Image>().fillAmount, 0f, Time.deltaTime * barMultiplier);
-                            }
-                            else if (MainClass.loc_depleted_breath.GetComponent<Image>().fillAmount < MainClass.loc_remining_diveTime)
+                            if (BetterDiving.loc_depleted_breath.GetComponent<Image>().fillAmount >= BetterDiving.loc_remining_diveTime)
                             {
-                                MainClass.loc_depleted_breath.SetActive(false);
-                                MainClass.highestOxygen = 0f;
+                                BetterDiving.loc_depleted_breath.GetComponent<Image>().fillAmount = Mathf.Lerp(BetterDiving.loc_depleted_breath.GetComponent<Image>().fillAmount, 0f, Time.deltaTime * barMultiplier);
+                            }
+                            else if (BetterDiving.loc_depleted_breath.GetComponent<Image>().fillAmount < BetterDiving.loc_remining_diveTime)
+                            {
+                                BetterDiving.loc_depleted_breath.SetActive(false);
+                                BetterDiving.highestOxygen = 0f;
                             }
                         }
                         else
                         {
-                            MainClass.loc_depleted_breath.SetActive(true);
-                            if (MainClass.loc_breath_bar.GetComponent<Image>().fillAmount > MainClass.highestOxygen)
+                            BetterDiving.loc_depleted_breath.SetActive(true);
+                            if (BetterDiving.loc_breath_bar.GetComponent<Image>().fillAmount > BetterDiving.highestOxygen)
                             {
-                                MainClass.highestOxygen = MainClass.loc_breath_bar.GetComponent<Image>().fillAmount;
+                                BetterDiving.highestOxygen = BetterDiving.loc_breath_bar.GetComponent<Image>().fillAmount;
                             }
-                            MainClass.loc_depleted_breath.GetComponent<Image>().fillAmount = MainClass.highestOxygen;
+                            BetterDiving.loc_depleted_breath.GetComponent<Image>().fillAmount = BetterDiving.highestOxygen;
                         }
 
                         //Change the color of the bar depending on how much divetime is left
-                        if (MainClass.loc_remining_diveTime <= 0.25f)
+                        if (BetterDiving.loc_remining_diveTime <= 0.25f)
                         {
                             //Set to Red
-                            MainClass.loc_breath_bar.GetComponent<Image>().color = new Color32(255, 68, 68, 255);
-                        } else
+                            BetterDiving.loc_breath_bar.GetComponent<Image>().color = new Color32(255, 68, 68, 255);
+                        }
+                        else
                         {
                             //Set to blue
-                            MainClass.loc_breath_bar.GetComponent<Image>().color = new Color32(0, 255, 239, 255);
+                            BetterDiving.loc_breath_bar.GetComponent<Image>().color = new Color32(0, 255, 239, 255);
                         }
                     }
                 }
@@ -988,9 +1066,9 @@ namespace Valheim_Diving_Mod
             [HarmonyPrefix]
             public static void Prefix(Hud __instance)
             {
-                if (MainClass.has_created_breathe_bar == false)
+                if (BetterDiving.has_created_breathe_bar == false)
                 {
-                    if(Player.m_localPlayer != null && Hud.instance != null && Hud.instance.m_pieceSelectionWindow != null)
+                    if (Player.m_localPlayer != null && Hud.instance != null && Hud.instance.m_pieceSelectionWindow != null)
                     {
                         Vector3 position = new Vector3(0, 0, 0);
                         Transform transform = Hud.instance.transform;
@@ -1003,13 +1081,13 @@ namespace Valheim_Diving_Mod
                             width: 20f,
                             height: 124f,
                             draggable: false);
-                        
-                        MainClass.loc_breath_bar_bg = panel;
 
-                        MainClass.loc_breath_bar_bg.name = "BreathBarBG";
-                        MainClass.loc_breath_bar_bg.GetComponent<Image>().sprite = MainClass.breath_bg_sprite;
+                        BetterDiving.loc_breath_bar_bg = panel;
 
-                        MainClass.loc_breath_bar_bg = panel;
+                        BetterDiving.loc_breath_bar_bg.name = "BreathBarBG";
+                        BetterDiving.loc_breath_bar_bg.GetComponent<Image>().sprite = BetterDiving.breath_bg_sprite;
+
+                        BetterDiving.loc_breath_bar_bg = panel;
 
                         // Create depleted breath bar
                         var depleted_breath_progress = GUIManager.Instance.CreateWoodpanel(
@@ -1021,15 +1099,15 @@ namespace Valheim_Diving_Mod
                             height: 120f,
                             draggable: false);
 
-                        MainClass.loc_depleted_breath = depleted_breath_progress;
+                        BetterDiving.loc_depleted_breath = depleted_breath_progress;
 
-                        MainClass.loc_depleted_breath.name = "depleted_breath_progress";
-                        MainClass.loc_depleted_breath.GetComponent<Image>().sprite = MainClass.breath_prog_sprite;
-                        MainClass.loc_depleted_breath.GetComponent<Image>().type = Image.Type.Filled;
-                        MainClass.loc_depleted_breath.GetComponent<Image>().fillMethod = Image.FillMethod.Vertical;
-                        MainClass.loc_depleted_breath.GetComponent<Image>().fillAmount = 1f;
+                        BetterDiving.loc_depleted_breath.name = "depleted_breath_progress";
+                        BetterDiving.loc_depleted_breath.GetComponent<Image>().sprite = BetterDiving.breath_prog_sprite;
+                        BetterDiving.loc_depleted_breath.GetComponent<Image>().type = Image.Type.Filled;
+                        BetterDiving.loc_depleted_breath.GetComponent<Image>().fillMethod = Image.FillMethod.Vertical;
+                        BetterDiving.loc_depleted_breath.GetComponent<Image>().fillAmount = 1f;
 
-                        MainClass.loc_depleted_breath.GetComponent<Image>().color = new Color32(204, 204, 204, 255);
+                        BetterDiving.loc_depleted_breath.GetComponent<Image>().color = new Color32(204, 204, 204, 255);
 
                         // Create the breath progress bar
 
@@ -1040,15 +1118,15 @@ namespace Valheim_Diving_Mod
                             position: new Vector2(60f, -60f),
                             width: 15f,
                             height: 120f,
-                            draggable:false);
+                            draggable: false);
 
-                        MainClass.loc_breath_bar = breath_progress;
+                        BetterDiving.loc_breath_bar = breath_progress;
 
-                        MainClass.loc_breath_bar.name = "breathbar_progress";
-                        MainClass.loc_breath_bar.GetComponent<Image>().sprite = MainClass.breath_prog_sprite;
-                        MainClass.loc_breath_bar.GetComponent<Image>().type = Image.Type.Filled;
-                        MainClass.loc_breath_bar.GetComponent<Image>().fillMethod = Image.FillMethod.Vertical;
-                        MainClass.loc_breath_bar.GetComponent<Image>().fillAmount = 1f;
+                        BetterDiving.loc_breath_bar.name = "breathbar_progress";
+                        BetterDiving.loc_breath_bar.GetComponent<Image>().sprite = BetterDiving.breath_prog_sprite;
+                        BetterDiving.loc_breath_bar.GetComponent<Image>().type = Image.Type.Filled;
+                        BetterDiving.loc_breath_bar.GetComponent<Image>().fillMethod = Image.FillMethod.Vertical;
+                        BetterDiving.loc_breath_bar.GetComponent<Image>().fillAmount = 1f;
 
                         // Create the breath progress overlay to apply a Valheim style
 
@@ -1061,32 +1139,32 @@ namespace Valheim_Diving_Mod
                             height: 120f,
                             draggable: false);
 
-                        MainClass.loc_breathe_overlay = breath_overlay;
-                        MainClass.loc_breathe_overlay.name = "BreathBarOverlay";
-                        MainClass.loc_breathe_overlay.GetComponent<Image>().sprite = MainClass.breath_overlay_sprite;
+                        BetterDiving.loc_breathe_overlay = breath_overlay;
+                        BetterDiving.loc_breathe_overlay.name = "BreathBarOverlay";
+                        BetterDiving.loc_breathe_overlay.GetComponent<Image>().sprite = BetterDiving.breath_overlay_sprite;
 
-                        if (MainClass.owBIPos.Value == true)
+                        if (BetterDiving.owBIPos.Value == true)
                         {
-                          
-                            MainClass.loc_breath_bar_bg.transform.position = new Vector3(MainClass.owBIPosX.Value, MainClass.owBIPosY.Value, Hud.instance.transform.position.y);
-                            MainClass.loc_depleted_breath.transform.position = new Vector3(MainClass.owBIPosX.Value, MainClass.owBIPosY.Value, Hud.instance.transform.position.y);
-                            MainClass.loc_breath_bar.transform.position = new Vector3(MainClass.owBIPosX.Value, MainClass.owBIPosY.Value, Hud.instance.transform.position.y);
-                            MainClass.loc_breathe_overlay.transform.position = new Vector3(MainClass.owBIPosX.Value, MainClass.owBIPosY.Value, Hud.instance.transform.position.y);
+
+                            BetterDiving.loc_breath_bar_bg.transform.position = new Vector3(BetterDiving.owBIPosX.Value, BetterDiving.owBIPosY.Value, Hud.instance.transform.position.y);
+                            BetterDiving.loc_depleted_breath.transform.position = new Vector3(BetterDiving.owBIPosX.Value, BetterDiving.owBIPosY.Value, Hud.instance.transform.position.y);
+                            BetterDiving.loc_breath_bar.transform.position = new Vector3(BetterDiving.owBIPosX.Value, BetterDiving.owBIPosY.Value, Hud.instance.transform.position.y);
+                            BetterDiving.loc_breathe_overlay.transform.position = new Vector3(BetterDiving.owBIPosX.Value, BetterDiving.owBIPosY.Value, Hud.instance.transform.position.y);
                         }
 
-                        MainClass.loc_breath_bar_bg.SetActive(false);
-                        MainClass.loc_depleted_breath.SetActive(false);
-                        MainClass.loc_breath_bar.SetActive(false);
-                        MainClass.loc_breathe_overlay.SetActive(false);
+                        BetterDiving.loc_breath_bar_bg.SetActive(false);
+                        BetterDiving.loc_depleted_breath.SetActive(false);
+                        BetterDiving.loc_breath_bar.SetActive(false);
+                        BetterDiving.loc_breathe_overlay.SetActive(false);
 
 
 
-                        MainClass.has_created_breathe_bar = true;
+                        BetterDiving.has_created_breathe_bar = true;
 
-                        if (MainClass.dive_timer_is_running == false)
+                        if (BetterDiving.dive_timer_is_running == false)
                         {
-                            __instance.StartCoroutine(MainClass.StartCountdown());
-                            MainClass.dive_timer_is_running = true;
+                            __instance.StartCoroutine(BetterDiving.StartCountdown());
+                            BetterDiving.dive_timer_is_running = true;
                         }
                     }
                 }
@@ -1117,18 +1195,18 @@ namespace Valheim_Diving_Mod
             {
                 if (GameCamera.instance)
                 {
-                    MainClass.water_level_camera = __instance.GetWaterSurface(new Vector3(GameCamera.instance.transform.position.x, GameCamera.instance.transform.position.y, GameCamera.instance.transform.position.z));
+                    BetterDiving.water_level_camera = __instance.GetWaterSurface(new Vector3(GameCamera.instance.transform.position.x, GameCamera.instance.transform.position.y, GameCamera.instance.transform.position.z));
                 }
                 if (Player.m_localPlayer)
                 {
-                    MainClass.water_level_player = __instance.GetWaterSurface(new Vector3(Player.m_localPlayer.transform.position.x, Player.m_localPlayer.transform.position.y, Player.m_localPlayer.transform.position.z));
+                    BetterDiving.water_level_player = __instance.GetWaterSurface(new Vector3(Player.m_localPlayer.transform.position.x, Player.m_localPlayer.transform.position.y, Player.m_localPlayer.transform.position.z));
                 }
-                if (MainClass.loc_cam_pos_y < MainClass.water_level_camera && MainClass.is_swimming)
+                if (BetterDiving.loc_cam_pos_y < BetterDiving.water_level_camera && BetterDiving.is_swimming)
                 {
-                    if (__instance.m_waterSurface.GetComponent<MeshRenderer>().transform.rotation.eulerAngles.y != 180f && MainClass.isEnvAllowed())
+                    if (__instance.m_waterSurface.GetComponent<MeshRenderer>().transform.rotation.eulerAngles.y != 180f && BetterDiving.isEnvAllowed())
                     {
                         __instance.m_waterSurface.transform.Rotate(180f, 0f, 0f);
-                        __instance.m_waterSurface.material = MainClass.water_mat;
+                        __instance.m_waterSurface.material = BetterDiving.water_mat;
                         __instance.m_waterSurface.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.TwoSided;
 
                         if (__instance.m_forceDepth >= 0f)
@@ -1148,15 +1226,15 @@ namespace Valheim_Diving_Mod
                         __instance.m_waterSurface.material.SetFloat(Shader.PropertyToID("_UseGlobalWind"), __instance.m_useGlobalWind ? 1f : 0f);
                     }
 
-                    __instance.m_waterSurface.transform.position = new Vector3(__instance.m_waterSurface.transform.position.x, MainClass.water_level_camera, __instance.m_waterSurface.transform.position.z);
+                    __instance.m_waterSurface.transform.position = new Vector3(__instance.m_waterSurface.transform.position.x, BetterDiving.water_level_camera, __instance.m_waterSurface.transform.position.z);
                 }
                 else
                 {
-                    if (__instance.m_waterSurface.GetComponent<MeshRenderer>().transform.rotation.eulerAngles.y == 180f && MainClass.isEnvAllowed())
+                    if (__instance.m_waterSurface.GetComponent<MeshRenderer>().transform.rotation.eulerAngles.y == 180f && BetterDiving.isEnvAllowed())
                     {
 
                         __instance.m_waterSurface.transform.Rotate(-180f, 0f, 0f);
-                        __instance.m_waterSurface.material = MainClass.mai_water_mat;
+                        __instance.m_waterSurface.material = BetterDiving.mai_water_mat;
 
                         if (__instance.m_forceDepth >= 0f)
                         {
@@ -1181,7 +1259,7 @@ namespace Valheim_Diving_Mod
             [HarmonyPostfix]
             public static void Postfix(WaterVolume __instance)
             {
-            
+
             }
         }
 
@@ -1192,24 +1270,24 @@ namespace Valheim_Diving_Mod
             [HarmonyPrefix]
             public static void Prefix(WaterVolume __instance)
             {
-                MainClass.DebugLog("---------------------Section WaterVolume Awake Prefix Start------------------------");
-                MainClass.DebugLog("water_volume_awake" + " -> " + "true");
-                MainClass.DebugLog("----------------------Section WaterVolume Awake Prefix End-------------------------");
+                BetterDiving.DebugLog("---------------------Section WaterVolume Awake Prefix Start------------------------");
+                BetterDiving.DebugLog("water_volume_awake" + " -> " + "true");
+                BetterDiving.DebugLog("----------------------Section WaterVolume Awake Prefix End-------------------------");
             }
 
             [HarmonyPostfix]
             public static void Postfix(WaterVolume __instance)
             {
-                MainClass.DebugLog("---------------------Section WaterVolume Awake Postfix Start------------------------");
-                MainClass.DebugLog("mai_water_mat" + " -> " + (MainClass.mai_water_mat == null ? "null" : "not null"));
+                BetterDiving.DebugLog("---------------------Section WaterVolume Awake Postfix Start------------------------");
+                BetterDiving.DebugLog("mai_water_mat" + " -> " + (BetterDiving.mai_water_mat == null ? "null" : "not null"));
 
-                if (MainClass.mai_water_mat == null)
+                if (BetterDiving.mai_water_mat == null)
                 {
-                    MainClass.mai_water_mat = __instance.m_waterSurface.material;
-                    MainClass.DebugLog("Info" + " -> " + "set water mat");
+                    BetterDiving.mai_water_mat = __instance.m_waterSurface.material;
+                    BetterDiving.DebugLog("Info" + " -> " + "set water mat");
                 }
 
-                MainClass.DebugLog("----------------------Section WaterVolume Awake Postfix End-------------------------");
+                BetterDiving.DebugLog("----------------------Section WaterVolume Awake Postfix End-------------------------");
             }
         }
 
@@ -1241,73 +1319,75 @@ namespace Valheim_Diving_Mod
             public static void Prefix(GameCamera __instance, Camera ___m_camera, ref bool ___m_waterClipping)
             {
                 //Env
-                if(MainClass.EnvName != EnvMan.instance.GetCurrentEnvironment().m_name)
+                if (BetterDiving.EnvName != EnvMan.instance.GetCurrentEnvironment().m_name)
                 {
-                    MainClass.EnvName = EnvMan.instance.GetCurrentEnvironment().m_name;
+                    BetterDiving.EnvName = EnvMan.instance.GetCurrentEnvironment().m_name;
                 }
 
                 //float water_level = 30f;
-                if ((MainClass.is_diving || MainClass.is_swimming) && MainClass.is_take_rest_in_water == false && MainClass.isEnvAllowed())
+                if ((BetterDiving.is_diving || BetterDiving.is_swimming) && BetterDiving.is_take_rest_in_water == false && BetterDiving.isEnvAllowed())
                 {
-                    //MainClass.DebugLog("m_minWaterDistance: " + __instance.m_minWaterDistance);
+                    //BetterDiving.DebugLog("m_minWaterDistance: " + __instance.m_minWaterDistance);
                     __instance.m_minWaterDistance = -5000f;
-                } else
+                }
+                else
                 {
-                    //MainClass.DebugLog("m_minWaterDistance: " + __instance.m_minWaterDistance);
+                    //BetterDiving.DebugLog("m_minWaterDistance: " + __instance.m_minWaterDistance);
                     __instance.m_minWaterDistance = 0.3f;
                 }
 
-                if (__instance.m_maxDistance != 3f && MainClass.loc_m_m_maxDistance == 0) MainClass.loc_m_m_maxDistance = __instance.m_maxDistance;
+                if (__instance.m_maxDistance != 3f && BetterDiving.loc_m_m_maxDistance == 0) BetterDiving.loc_m_m_maxDistance = __instance.m_maxDistance;
 
-                MainClass.loc_cam_pos_y = ___m_camera.gameObject.transform.position.y;
+                BetterDiving.loc_cam_pos_y = ___m_camera.gameObject.transform.position.y;
 
-                if (___m_camera.gameObject.transform.position.y < MainClass.water_level_camera && (MainClass.is_swimming || MainClass.is_diving) && MainClass.isEnvAllowed())
+                if (___m_camera.gameObject.transform.position.y < BetterDiving.water_level_camera && (BetterDiving.is_swimming || BetterDiving.is_diving) && BetterDiving.isEnvAllowed())
                 {
                     if (__instance.m_minWaterDistance != -5000f) __instance.m_minWaterDistance = -5000f;
-                    if (MainClass.is_diving) __instance.m_maxDistance = 3f;
+                    if (BetterDiving.is_diving) __instance.m_maxDistance = 3f;
 
                     EnvSetup curr_env = EnvMan.instance.GetCurrentEnvironment();
                     Color water_color;
                     if (EnvMan.instance.IsNight())
                     {
                         water_color = curr_env.m_fogColorNight;
-                    } else
+                    }
+                    else
                     {
                         water_color = curr_env.m_fogColorDay;
                         //water_color = ChangeColorBrightness(water_color, -0.01f);
                     }
 
                     water_color.a = 1f;
-                    water_color = ChangeColorBrightness(water_color, MainClass.char_swim_depth * (MainClass.ow_color_brightness_factor.Value));
+                    water_color = ChangeColorBrightness(water_color, BetterDiving.char_swim_depth * (BetterDiving.ow_color_brightness_factor.Value));
                     RenderSettings.fogColor = water_color;
 
-                    float fog_dens = RenderSettings.fogDensity + (MainClass.char_swim_depth * MainClass.ow_fogdensity_factor.Value);
-                    if (fog_dens < MainClass.ow_Min_fogdensity.Value) fog_dens = MainClass.ow_Min_fogdensity.Value;
-                    if (fog_dens > MainClass.ow_Max_fogdensity.Value) fog_dens = MainClass.ow_Max_fogdensity.Value;
+                    float fog_dens = RenderSettings.fogDensity + (BetterDiving.char_swim_depth * BetterDiving.ow_fogdensity_factor.Value);
+                    if (fog_dens < BetterDiving.ow_Min_fogdensity.Value) fog_dens = BetterDiving.ow_Min_fogdensity.Value;
+                    if (fog_dens > BetterDiving.ow_Max_fogdensity.Value) fog_dens = BetterDiving.ow_Max_fogdensity.Value;
 
                     RenderSettings.fogDensity = fog_dens;
 
-                    MainClass.reder_settings_updated_camera = false;    
+                    BetterDiving.render_settings_updated_camera = false;
                 }
                 else
                 {
-                    if (___m_camera.gameObject.transform.position.y > MainClass.water_level_camera)
+                    if (___m_camera.gameObject.transform.position.y > BetterDiving.water_level_camera)
                     {
-                        if (MainClass.reder_settings_updated_camera == false)
+                        if (BetterDiving.render_settings_updated_camera == false)
                         {
-                            if (MainClass.loc_m_m_maxDistance != 0) __instance.m_maxDistance = MainClass.loc_m_m_maxDistance;
+                            if (BetterDiving.loc_m_m_maxDistance != 0) __instance.m_maxDistance = BetterDiving.loc_m_m_maxDistance;
                             EnvMan.instance.SetForceEnvironment(EnvMan.instance.GetCurrentEnvironment().m_name);
-                            MainClass.reder_settings_updated_camera = true;
-                            MainClass.set_force_env = true;
+                            BetterDiving.render_settings_updated_camera = true;
+                            BetterDiving.set_force_env = true;
                         }
-                        if (MainClass.set_force_env == true)
+                        if (BetterDiving.set_force_env == true)
                         {
                             EnvMan.instance.SetForceEnvironment("");
-                            MainClass.set_force_env = false;
+                            BetterDiving.set_force_env = false;
                         }
                     }
-                    if (!MainClass.is_diving && MainClass.loc_m_m_maxDistance != 0) __instance.m_maxDistance = MainClass.loc_m_m_maxDistance;
-                    if (!MainClass.is_diving && MainClass.minwaterdist != 0f) __instance.m_minWaterDistance = MainClass.minwaterdist;
+                    if (!BetterDiving.is_diving && BetterDiving.loc_m_m_maxDistance != 0) __instance.m_maxDistance = BetterDiving.loc_m_m_maxDistance;
+                    if (!BetterDiving.is_diving && BetterDiving.minwaterdist != 0f) __instance.m_minWaterDistance = BetterDiving.minwaterdist;
                 }
             }
         }

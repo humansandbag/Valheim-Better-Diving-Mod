@@ -14,6 +14,10 @@ Like this mod? Development requires a lot of coffee. Support me by buying me a c
 - Diving mode will be automatically cancelled when the player returns to the surface of the water
 - While on the surface with diving mode disabled, the player will automatically rest and slowly regain stamina when not in motion
 - The player will gain a Diving skill while diving
+- Swim faster by holding the Run button
+- Faster swim speed and stamina depletion are determined by the players Swim skill
+- Stamina is depleted faster while fast swimming avove water
+- Oxygen is depleted faster rather than stamina when fast swimming underwater
 - Many options can be customized via the config file
 
 ## Installation
@@ -29,6 +33,18 @@ Like this mod? Development requires a lot of coffee. Support me by buying me a c
 Copy the `MainStreetGaming-BetterDiving` folder to `<GameDirectory>/BepInEx/plugins`.
 
 ## Changelog:
+
+### v1.0.3
+- Added feature that allows the player to swim faster by holding the Run button
+- Oxygen is consumed faster rather than stamina when fast swimming while underwater
+- Resting is now triggerd based on players velocity
+- Large waves/thunderstorms now hinder ability to rest in water
+- Fixed bug that allowed stamina regen when autoswimming
+- Changed debug value has_ping_sent to is_underwater and reversed the logic
+- Changed debug value reder_settings_updated_camera to render_settings_updated_camera
+- Removed unused debug values, variables, and references
+- Added new debug values: last_dive_cancel, fastSwimSpeed, and fastSwimStamDrain
+- Added new config setting allowFastSwimming
 
 ### v1.0.2
 - WaterWalking in Epic Loot was deprecated in version 0.9.0. Removed unneeded compatability fix.
