@@ -16,7 +16,7 @@ Like this mod? Development requires a lot of coffee. Support me by buying me a c
 - The player will gain a Diving skill while diving
 - Swim faster by holding the Run button
 - Faster swim speed and stamina depletion are determined by the players Swim skill
-- Stamina is depleted faster while fast swimming avove water
+- Stamina is depleted faster while fast swimming above water
 - Oxygen is depleted faster rather than stamina when fast swimming underwater
 - Many options can be customized via the config file
 
@@ -37,9 +37,9 @@ Copy the `MainStreetGaming-BetterDiving` folder to `<GameDirectory>/BepInEx/plug
 ### v1.0.3
 - Added feature that allows the player to swim faster by holding the Run button
 - Oxygen is consumed faster rather than stamina when fast swimming while underwater
-- Resting is now triggerd based on players velocity
+- Resting is now triggered based on players velocity
 - Large waves/thunderstorms now hinder ability to rest in water
-- Fixed bug that allowed stamina regen when autoswimming
+- Fixed bug that allowed stamina regen while autoswimming
 - Changed debug value has_ping_sent to is_underwater and reversed the logic
 - Changed debug value reder_settings_updated_camera to render_settings_updated_camera
 - Removed unused debug values, variables, and references

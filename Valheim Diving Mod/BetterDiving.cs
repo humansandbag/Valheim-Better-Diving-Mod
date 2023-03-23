@@ -4,8 +4,6 @@ using HarmonyLib;
 using Jotunn.Configs;
 using Jotunn.Managers;
 using System;
-using System.IO;
-using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -13,7 +11,7 @@ namespace Valheim_Diving_Mod
 {
     namespace BetterDiving
     {
-        [BepInPlugin("MainStreetGaming.BetterDiving", "Valheim Better Diving", "1.0.3")]
+        [BepInPlugin("MainStreetGaming.BetterDiving", "Valheim Better Diving", "1.0.4")]
         [BepInProcess("valheim.exe")]
         [BepInDependency(Jotunn.Main.ModGuid)]
 
@@ -142,25 +140,33 @@ namespace Valheim_Diving_Mod
             {
                 DebugLog("Better Diving Mod: Ienumerator start!");
 
-                string assemblyFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                AssetBundle localAssetBundle = AssetBundle.LoadFromFile(assemblyFolder + "/watermat.assets");
+                //string assemblyFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 
-                if (localAssetBundle == null)
+                //AssetBundle localAssetBundle = AssetBundle.LoadFromFile(assemblyFolder + "/watermat.assets");
+                AssetBundle watermatAssetBundle = Jotunn.Utils.AssetUtils.LoadAssetBundleFromResources("watermat.assets");
+
+                if (watermatAssetBundle == null)
                 {
-                    Debug.LogError("load_assets_failed");
+                    Debug.LogError("load_watermat_assets_failed");
                     return null;
                 }
 
-                water_mat = localAssetBundle.LoadAsset<Material>("WaterMat");
-                dive_texture = localAssetBundle.LoadAsset<Texture2D>("vhdm_dive_icon_1");
-                //breath_prog_sprite = localAssetBundle.LoadAsset<Sprite>("Square");
+                AssetBundle betterDivingAssetBundle = Jotunn.Utils.AssetUtils.LoadAssetBundleFromResources("betterdiving.assets");
 
-                //Texture path relative to "plugins" BepInEx folder
-                breath_prog_tex = Jotunn.Utils.AssetUtils.LoadTexture("MainStreetGaming-BetterDiving/BreathBar.png");
+                if (betterDivingAssetBundle == null)
+                {
+                    Debug.LogError("load_betterdiving_assets_failed");
+                    return null;
+                }
+
+                // Load assets
+                water_mat = watermatAssetBundle.LoadAsset<Material>("WaterMat");
+                dive_texture = watermatAssetBundle.LoadAsset<Texture2D>("vhdm_dive_icon_1");
+                breath_prog_tex = betterDivingAssetBundle.LoadAsset<Texture2D>("BreathBar.png");
                 breath_prog_sprite = Sprite.Create(breath_prog_tex, new Rect(0f, 0f, breath_prog_tex.width, breath_prog_tex.height), Vector2.zero);
-                breath_bg_tex = Jotunn.Utils.AssetUtils.LoadTexture("MainStreetGaming-BetterDiving/BreathBar_BG.png");
+                breath_bg_tex = betterDivingAssetBundle.LoadAsset<Texture2D>("BreathBar_BG.png");
                 breath_bg_sprite = Sprite.Create(breath_bg_tex, new Rect(0f, 0f, breath_bg_tex.width, breath_bg_tex.height), Vector2.zero);
-                breath_overlay_tex = Jotunn.Utils.AssetUtils.LoadTexture("MainStreetGaming-BetterDiving/BreathBarOverlay.png");
+                breath_overlay_tex = betterDivingAssetBundle.LoadAsset<Texture2D>("BreathBarOverlay.png");
                 breath_overlay_sprite = Sprite.Create(breath_overlay_tex, new Rect(0f, 0f, breath_overlay_tex.width, breath_overlay_tex.height), Vector2.zero);
 
                 //Register DivingSkill
@@ -174,7 +180,7 @@ namespace Valheim_Diving_Mod
                     Icon = BetterDiving.DivingSprite
                 });
 
-                localAssetBundle.Unload(false);
+                watermatAssetBundle.Unload(false);
                 return null;
             }
 
@@ -186,7 +192,6 @@ namespace Valheim_Diving_Mod
 
                     //Debug
                     DebugLog("---------------------Section Debug Start------------------------");
-
                     DebugLog("is_diving" + " -> " + is_diving);
                     DebugLog("is_swimming" + " -> " + is_swimming);
                     DebugLog("m_minDiveSkillImprover" + " -> " + m_minDiveSkillImprover);
@@ -230,107 +235,110 @@ namespace Valheim_Diving_Mod
                     DebugLog("last_dive_cancel" + " -> " + last_dive_cancel);
                     DebugLog("fastSwimSpeed" + " -> " + fastSwimSpeed);
                     DebugLog("fastSwimStamDrain" + " -> " + fastSwimStamDrain);
-
                     DebugLog("----------------------Section Debug End-------------------------");
-
                     DebugLog("---------------------Section Update Some Values Start------------------------");
 
-                    if (Player.m_localPlayer != null)
+                    // Potential bug fix for multiplayer dive prevention and rapid oxygen depletion bug
+                    if (Player.m_localPlayer)
                     {
-                        player_max_stamina = Player.m_localPlayer.GetMaxStamina();
-                        player_stamina_to_update = Player.m_localPlayer.GetStamina();
-                    }
 
-                    if (is_diving && is_swimming)
-                    {
-                        m_minDiveSkillImprover++;
-                        if (loc_remining_diveTime >= 0f)
+                        if (Player.m_localPlayer != null)
                         {
-                            if (loc_remining_diveTime >= 1f) loc_remining_diveTime = 1f;
+                            player_max_stamina = Player.m_localPlayer.GetMaxStamina();
+                            player_stamina_to_update = Player.m_localPlayer.GetStamina();
+                        }
 
-                            var one_percentage = 1f / 120f;
-
-                            float final_dive_drain = breatheDrain.Value;
-                            float final_dive_drain_one_percentage = breatheDrain.Value / 120f;
-
-                            DebugLog("one_percentage" + " -> " + one_percentage);
-                            DebugLog("final_dive_drain" + " -> " + final_dive_drain);
-                            DebugLog("final_dive_drain_one_percentage" + " -> " + final_dive_drain_one_percentage);
-
-
-                            if (Player.m_localPlayer != null)
+                        if (is_diving && is_swimming)
+                        {
+                            m_minDiveSkillImprover++;
+                            if (loc_remining_diveTime >= 0f)
                             {
-                                float skillFactor = Player.m_localPlayer.GetSkillFactor(DivingSkillType);
-                                float num = Mathf.Lerp(1f, 0.5f, skillFactor);
-                                final_dive_drain = (final_dive_drain * num) / 120f;
-                                if (final_dive_drain > final_dive_drain_one_percentage) final_dive_drain = final_dive_drain_one_percentage;
+                                if (loc_remining_diveTime >= 1f) loc_remining_diveTime = 1f;
 
-                                if (ZInput.GetButton("Run") && allowFastSwimming.Value == true)
+                                var one_percentage = 1f / 120f;
+
+                                float final_dive_drain = breatheDrain.Value;
+                                float final_dive_drain_one_percentage = breatheDrain.Value / 120f;
+
+                                DebugLog("one_percentage" + " -> " + one_percentage);
+                                DebugLog("final_dive_drain" + " -> " + final_dive_drain);
+                                DebugLog("final_dive_drain_one_percentage" + " -> " + final_dive_drain_one_percentage);
+
+
+                                if (Player.m_localPlayer != null)
                                 {
-                                    final_dive_drain *= 2f;
+                                    float skillFactor = Player.m_localPlayer.GetSkillFactor(DivingSkillType);
+                                    float num = Mathf.Lerp(1f, 0.5f, skillFactor);
+                                    final_dive_drain = (final_dive_drain * num) / 120f;
+                                    if (final_dive_drain > final_dive_drain_one_percentage) final_dive_drain = final_dive_drain_one_percentage;
+
+                                    if (ZInput.GetButton("Run") && allowFastSwimming.Value == true)
+                                    {
+                                        final_dive_drain *= 2f;
+                                    }
+
+                                    loc_remining_diveTime -= final_dive_drain;
+
+                                    DebugLog("skillFactor" + " -> " + skillFactor);
+                                    DebugLog("converted skillFactor" + " -> " + num);
+                                    DebugLog("final_dive_drain" + " -> " + final_dive_drain);
                                 }
+                            }
+                            if (loc_remining_diveTime <= 0f)
+                            {
+                                player_stamina_to_update -= player_max_stamina * 0.2f;
+                            }
+                        }
+                        else
+                        {
+                            if (loc_remining_diveTime < 1f)
+                            {
+                                var one_percentage = 1f / 120f;
 
-                                loc_remining_diveTime -= final_dive_drain;
+                                float final_dive_drain = breatheDrain.Value;
+                                float final_dive_drain_one_percentage = breatheDrain.Value / 120f;
 
-                                DebugLog("skillFactor" + " -> " + skillFactor);
-                                DebugLog("converted skillFactor" + " -> " + num);
+                                DebugLog("one_percentage" + " -> " + one_percentage);
                                 DebugLog("final_dive_drain" + " -> " + final_dive_drain);
+                                DebugLog("final_dive_drain_one_percentage" + " -> " + final_dive_drain_one_percentage);
+
+                                if (Player.m_localPlayer != null)
+                                {
+                                    float skillFactor = Player.m_localPlayer.GetSkillFactor(DivingSkillType);
+                                    float num = Mathf.Lerp(1f, 0.5f, skillFactor);
+                                    final_dive_drain = (final_dive_drain * num) / 120f;
+                                    if (final_dive_drain > final_dive_drain_one_percentage) final_dive_drain = final_dive_drain_one_percentage;
+
+                                    loc_remining_diveTime += 0.125f;
+
+                                    DebugLog("skillFactor" + " -> " + skillFactor);
+                                    DebugLog("converted skillFactor" + " -> " + num);
+                                    DebugLog("final_dive_drain" + " -> " + final_dive_drain);
+                                }
                             }
-                        }
-                        if (loc_remining_diveTime <= 0f)
-                        {
-                            player_stamina_to_update -= player_max_stamina * 0.2f;
-                        }
-                    }
-                    else
-                    {
-                        if (loc_remining_diveTime < 1f)
-                        {
-                            var one_percentage = 1f / 120f;
 
-                            float final_dive_drain = breatheDrain.Value;
-                            float final_dive_drain_one_percentage = breatheDrain.Value / 120f;
-
-                            DebugLog("one_percentage" + " -> " + one_percentage);
-                            DebugLog("final_dive_drain" + " -> " + final_dive_drain);
-                            DebugLog("final_dive_drain_one_percentage" + " -> " + final_dive_drain_one_percentage);
-
-                            if (Player.m_localPlayer != null)
-                            {
-                                float skillFactor = Player.m_localPlayer.GetSkillFactor(DivingSkillType);
-                                float num = Mathf.Lerp(1f, 0.5f, skillFactor);
-                                final_dive_drain = (final_dive_drain * num) / 120f;
-                                if (final_dive_drain > final_dive_drain_one_percentage) final_dive_drain = final_dive_drain_one_percentage;
-
-                                loc_remining_diveTime += 0.125f;
-
-                                DebugLog("skillFactor" + " -> " + skillFactor);
-                                DebugLog("converted skillFactor" + " -> " + num);
-                                DebugLog("final_dive_drain" + " -> " + final_dive_drain);
-                            }
                         }
 
-                    }
+                        DebugLog("is_take_rest_in_water" + " -> " + is_take_rest_in_water);
 
-                    DebugLog("is_take_rest_in_water" + " -> " + is_take_rest_in_water);
-
-                    if (is_take_rest_in_water == true)
-                    {
-                        if (player_stamina_to_update < player_max_stamina)
+                        if (is_take_rest_in_water == true)
                         {
-                            if (ow_staminaRestoreValue.Value == true)
+                            if (player_stamina_to_update < player_max_stamina)
                             {
-                                player_stamina_to_update += ow_staminaRestorPerTick.Value;
+                                if (ow_staminaRestoreValue.Value == true)
+                                {
+                                    player_stamina_to_update += ow_staminaRestorPerTick.Value;
 
-                                DebugLog("ow_staminaRestorPerTick" + " -> " + ow_staminaRestorPerTick.Value);
-                                DebugLog("player_stamina_to_update" + " -> " + player_stamina_to_update);
-                            }
-                            else
-                            {
-                                player_stamina_to_update += player_max_stamina * 0.0115f;
+                                    DebugLog("ow_staminaRestorPerTick" + " -> " + ow_staminaRestorPerTick.Value);
+                                    DebugLog("player_stamina_to_update" + " -> " + player_stamina_to_update);
+                                }
+                                else
+                                {
+                                    player_stamina_to_update += player_max_stamina * 0.0115f;
 
-                                DebugLog("ow_staminaRestorPerTick" + " -> " + player_max_stamina * 0.0115f);
-                                DebugLog("player_stamina_to_update" + " -> " + player_stamina_to_update);
+                                    DebugLog("ow_staminaRestorPerTick" + " -> " + player_max_stamina * 0.0115f);
+                                    DebugLog("player_stamina_to_update" + " -> " + player_stamina_to_update);
+                                }
                             }
                         }
                     }

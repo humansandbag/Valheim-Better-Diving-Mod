@@ -80,9 +80,6 @@
     <Reference Include="Jotunn">
       <HintPath>..\Libs\Jotunn.dll</HintPath>
     </Reference>
-    <Reference Include="JotunnLib">
-      <HintPath>..\Libs\JotunnLib.dll</HintPath>
-    </Reference>
     <Reference Include="Mono.Cecil">
       <HintPath>..\Libs\Mono.Cecil.dll</HintPath>
     </Reference>
@@ -113,8 +110,7 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
-    <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="UnityEngine">
       <HintPath>..\Libs\UnityEngine.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.AccessibilityModule">
@@ -221,19 +217,18 @@
     <Reference Include="UnityEngine.XRModule">
       <HintPath>..\Libs\UnityEngine.XRModule.dll</HintPath>
     </Reference>
-    <Reference Include="UnityEngine_New">
-      <HintPath>..\Libs\UnityEngine_New.dll</HintPath>
-    </Reference>
     <Reference Include="netstandard" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MainClass.cs" />
+    <Compile Include="BetterDiving.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Resources\betterdiving.assets" />
     <None Include="Resources\Image1.bmp" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Resources\watermat.assets" />
     <None Include="Resources\Water_normals.png" />
   </ItemGroup>
   <ItemGroup>
