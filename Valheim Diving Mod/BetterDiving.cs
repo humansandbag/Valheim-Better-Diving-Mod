@@ -3,7 +3,9 @@ using BepInEx.Configuration;
 using HarmonyLib;
 using Jotunn.Configs;
 using Jotunn.Managers;
+using Jotunn.Utils;
 using System;
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -14,6 +16,7 @@ namespace Valheim_Diving_Mod
         [BepInPlugin("MainStreetGaming.BetterDiving", "Valheim Better Diving", "1.0.4")]
         [BepInProcess("valheim.exe")]
         [BepInDependency(Jotunn.Main.ModGuid)]
+        //[NetworkCompatibility(CompatibilityLevel.EveryoneMustHaveMod, VersionStrictness.Minor)]
 
         public class BetterDiving : BaseUnityPlugin
         {
@@ -349,128 +352,11 @@ namespace Valheim_Diving_Mod
             //Mod setup
             void Awake()
             {
-                harmony = new Harmony("MainStreetGaming.BetterDiving");
-                harmony.PatchAll();
+                //harmony = new Harmony("MainStreetGaming.BetterDiving");
+                //harmony.PatchAll();
+                Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
 
-                configGreeting = Config.Bind("General",                                // The section under which the option is shown
-                                     "GreetingText",                                   // The key of the configuration option in the configuration file
-                                     "Hello, thanks for using the Better Diving Mod by Main Street Gaming!", // The default value
-                                     "");                                              // The description
-
-                configDisplayGreeting = Config.Bind("General",
-                                           "DisplayGreeting",
-                                           true,
-                                           "Whether or not to show the greeting text");
-
-                showYouCanBreatheMsg = Config.Bind("GUI",
-                                            "showYouCanBreatheMsg",
-                                            false,
-                                            "Whether or not to show the You Can Breathe message. Disable if the surfacing message is enabled.");
-
-                showDivingMsg = Config.Bind("GUI",
-                                            "showDivingMsg",
-                                            true,
-                                            "Whether or not to show messages when triggering/cancelling diving");
-
-                divingMsg = Config.Bind("GUI",
-                                            "Diving message",
-                                            "You prepare to dive");
-
-                divingCancelledMsg = Config.Bind("GUI",
-                                            "Diving cancelled message",
-                                            "You remain on the surface");
-
-                showSurfacingMsg = Config.Bind("GUI",
-                                            "showSurfacingMsg",
-                                            true,
-                                            "Whether or not to show a message when surfacing");
-
-                surfacingMsg = Config.Bind("GUI",
-                                            "Surfacing message",
-                                            "You have surfaced");
-
-                allowRestInWater = Config.Bind("GUI",
-                                           "allowRestInWater",
-                                           true,
-                                           "Whether or not to allow stamina regen in water when able to breath and not moving");
-
-                allowFastSwimming = Config.Bind("GUI",
-                           "allowFastSwimming",
-                           true,
-                           "Allow fast swimming when holding the Run button");
-
-                owBIPos = Config.Bind("GUI",
-                                           "owBIPos",
-                                           false,
-                                           "Override breathe indicator position");
-
-                owBIPosX = Config.Bind("GUI",
-                                               "owBIPosX",
-                                               30f,
-                                           "Override breathe indicator position X");
-
-                owBIPosY = Config.Bind("GUI",
-                                               "owBIPosY",
-                                               150f,
-                                           "Override breathe indicator position Y");
-
-                breatheDrain = Config.Bind("Overrides",
-                                               "breatheDrain",
-                                               4f,
-                                           "Breathe indicator reduction per tick");
-
-                c_swimStaminaDrainMinSkill = Config.Bind("Overrides",
-                                               "c_swimStaminaDrainMinSkill",
-                                               0.7f,
-                                           "Min stamina drain while diving");
-
-                c_swimStaminaDrainMaxSkill = Config.Bind("Overrides",
-                                               "c_swimStaminaDrainMaxSkill",
-                                               0.8f,
-                                           "Max stamina drain while diving");
-
-                ow_staminaRestoreValue = Config.Bind("Overrides",
-                                               "ow_staminaRestoreValue",
-                                               false,
-                                           "Overwrite stamina restore value per tick when take rest in water");
-
-                ow_staminaRestorPerTick = Config.Bind("Overrides",
-                                               "ow_staminaRestorPerTick",
-                                               0.7f,
-                                           "Stamina restore value per tick when take rest in water");
-
-                ow_color_brightness_factor = Config.Bind("Water",
-                                               "ow_color_brightness_factor",
-                                               -0.0092f,
-                                           "Reduce color brightness based on swimdepth (RGB)\n\n" +
-                                               "char_swim_depth * ow_color_brightness_factor = correctionFactor.\n\nCorrection:\n" +
-                                               "correctionFactor *= -1;\n" +
-                                               "red -= red * correctionFactor;\n" +
-                                               "green -= green * correctionFactor;\n" +
-                                               "blue -= blue * correctionFactor;\n\n" +
-                                               "ow_color_brightness_factor must be a negative value");
-
-                ow_fogdensity_factor = Config.Bind("Water",
-                                               "ow_fogdensity_factor",
-                                               0.00092f,
-                                           "Set fog density based on swimdepth\n\nCorrection:\n" +
-                                               "RenderSettings.fogDensity = RenderSettings.fogDensity + (char_swim_depth * ow_fogdensity_factor)");
-
-                ow_Min_fogdensity = Config.Bind("Water",
-                                               "ow_Min_fogdensity",
-                                               0.175f,
-                                           "Set min fog density");
-
-                ow_Max_fogdensity = Config.Bind("Water",
-                                               "ow_Max_fogdensity",
-                                               2f,
-                                           "Set max fog density");
-
-                doDebug = Config.Bind("Debug",
-                                               "doDebug",
-                                               false,
-                                               "Debug mode on or off");
-
+                CreateConfigValues();
 
                 if (configDisplayGreeting.Value)
                 {
@@ -489,8 +375,52 @@ namespace Valheim_Diving_Mod
                 }
             }
 
-            //Env
-            public static bool isEnvAllowed()
+            private void CreateConfigValues()
+            {
+                ConfigurationManagerAttributes isAdminOnly = new ConfigurationManagerAttributes { IsAdminOnly = true };
+
+                // Local config values
+                doDebug = Config.Bind("Debug", "doDebug", false, "Debug mode on or off");
+                configGreeting = Config.Bind("Local config", "GreetingText", "Hello, thanks for using the Better Diving Mod by Main Street Gaming!", "");
+                configDisplayGreeting = Config.Bind("Local config", "DisplayGreeting", true, "Whether or not to show the greeting text");
+                showYouCanBreatheMsg = Config.Bind("Local config", "showYouCanBreatheMsg", false, "Whether or not to show the You Can Breathe message. Disable if the surfacing message is enabled.");
+                showDivingMsg = Config.Bind("Local config", "showDivingMsg", true, "Whether or not to show messages when triggering/cancelling diving");
+                divingMsg = Config.Bind("Local config", "Diving message", "You prepare to dive");
+                divingCancelledMsg = Config.Bind("Local config", "Diving cancelled message", "You remain on the surface");
+                showSurfacingMsg = Config.Bind("Local config", "showSurfacingMsg", true, "Whether or not to show a message when surfacing");
+                surfacingMsg = Config.Bind("Local config", "Surfacing message", "You have surfaced");
+                owBIPos = Config.Bind("Local config", "owBIPos", false, "Override breathe indicator position");
+                owBIPosX = Config.Bind("Local config", "owBIPosX", 30f, "Override breathe indicator position X");
+                owBIPosY = Config.Bind("Local config", "owBIPosY", 150f, "Override breathe indicator position Y");
+
+
+                // Server synced config values
+                allowRestInWater = Config.Bind("Server config", "allowRestInWater", true, new ConfigDescription("Whether or not to allow stamina regen in water when able to breath and not moving", null, isAdminOnly));
+                allowFastSwimming = allowRestInWater = Config.Bind("Server config", "allowFastSwimming", true, new ConfigDescription("Allow fast swimming when holding the Run button", null, isAdminOnly));
+                breatheDrain = Config.Bind("Server config", "breatheDrain", 4f, new ConfigDescription("Breathe indicator reduction per tick", null, isAdminOnly));
+                c_swimStaminaDrainMinSkill = Config.Bind("Server config", "c_swimStaminaDrainMinSkill", 0.7f, new ConfigDescription("Min stamina drain while diving", null, isAdminOnly));
+                c_swimStaminaDrainMaxSkill = Config.Bind("Server config", "c_swimStaminaDrainMaxSkill", 0.8f, new ConfigDescription("Max stamina drain while diving", null, isAdminOnly));
+                ow_staminaRestoreValue = Config.Bind("Server config", "ow_staminaRestoreValue",false, new ConfigDescription("Overwrite stamina restore value per tick when take rest in water", null, isAdminOnly));
+                ow_staminaRestorPerTick = Config.Bind("Server config", "ow_staminaRestorPerTick", 0.7f, new ConfigDescription("Stamina restore value per tick when take rest in water", null, isAdminOnly));
+
+                // Water - Server synced config values
+                ow_color_brightness_factor = Config.Bind("Server config - Water", "ow_color_brightness_factor", -0.0092f, new ConfigDescription(
+                                               "Reduce color brightness based on swimdepth (RGB)\n\n" +
+                                               "char_swim_depth * ow_color_brightness_factor = correctionFactor.\n\nCorrection:\n" +
+                                               "correctionFactor *= -1;\n" +
+                                               "red -= red * correctionFactor;\n" +
+                                               "green -= green * correctionFactor;\n" +
+                                               "blue -= blue * correctionFactor;\n\n" +
+                                               "ow_color_brightness_factor must be a negative value", null, isAdminOnly));
+                ow_fogdensity_factor = Config.Bind("Server config - Water", "ow_fogdensity_factor", 0.00092f, new ConfigDescription(
+                                               "Set fog density based on swimdepth\n\nCorrection:\n" +
+                                               "RenderSettings.fogDensity = RenderSettings.fogDensity + (char_swim_depth * ow_fogdensity_factor)", null, isAdminOnly));
+                ow_Min_fogdensity = Config.Bind("Server config - Water", "ow_Min_fogdensity", 0.175f, new ConfigDescription("Set min fog density", null, isAdminOnly));
+                ow_Max_fogdensity = Config.Bind("Server config - Water", "ow_Max_fogdensity", 2f, new ConfigDescription("Set max fog density", null, isAdminOnly));
+            }
+
+                //Env
+                public static bool isEnvAllowed()
             {
                 if (BetterDiving.EnvName == "SunkenCrypt") return false;
 
@@ -1011,14 +941,6 @@ namespace Valheim_Diving_Mod
                             Player.m_localPlayer.m_swimStaminaDrainMinSkill = BetterDiving.m_swimStaminaDrainMinSkill;
                         }
                     }
-                    //Hides the healthbar immediately when on land
-                    /*else if (BetterDiving.loc_breath_bar != null && Hud.instance != null && BetterDiving.has_created_breathe_bar == true && BetterDiving.loc_breath_bar.activeSelf)
-                    {
-                        BetterDiving.loc_breath_bar_bg.SetActive(false);
-                        BetterDiving.loc_depleted_breath.SetActive(false);
-                        BetterDiving.loc_breath_bar.SetActive(false);
-                        BetterDiving.loc_breathe_overlay.SetActive(false);
-                    }*/
                 }
                 if (BetterDiving.loc_breath_bar != null && Hud.instance != null && BetterDiving.has_created_breathe_bar == true && BetterDiving.loc_breath_bar.activeSelf)
                 {
@@ -1177,12 +1099,6 @@ namespace Valheim_Diving_Mod
                     }
                 }
             }
-
-            /*[HarmonyPostfix]
-            public static void Postfix(Hud __instance)
-            {
-
-            }*/
         }
 
         //Watervolume update -> update watervolume values for diving or walking
@@ -1263,12 +1179,6 @@ namespace Valheim_Diving_Mod
                     }
                 }
             }
-
-           /* [HarmonyPostfix]
-            public static void Postfix(WaterVolume __instance)
-            {
-
-            }*/
         }
 
         //Water volume awake -> detect water volumes
