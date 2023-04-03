@@ -14,7 +14,7 @@ Like this mod? Development requires a lot of coffee. Support me by buying me a c
 - Diving mode will be automatically cancelled when the player returns to the surface of the water
 - While on the surface with diving mode disabled, the player will automatically rest and slowly regain stamina when not in motion
 - The player will gain a Diving skill while diving
-- The players oxygen bar drain rate is determined by the Dive skill
+- The players oxygen bar drain rate is determined by the Diving skill
 - Swim faster by holding the Run button
 - Faster swim speed and stamina depletion are determined by the players Swim skill
 - Stamina is depleted faster while fast swimming above water
