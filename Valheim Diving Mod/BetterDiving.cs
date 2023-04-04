@@ -16,6 +16,7 @@ namespace Valheim_Diving_Mod
         [BepInPlugin("MainStreetGaming.BetterDiving", "Valheim Better Diving", "1.0.4")]
         [BepInProcess("valheim.exe")]
         [BepInDependency(Jotunn.Main.ModGuid)]
+        [BepInIncompatibility("blacks7ar.VikingsDoSwim")]
         //[NetworkCompatibility(CompatibilityLevel.EveryoneMustHaveMod, VersionStrictness.Minor)]
 
         public class BetterDiving : BaseUnityPlugin
@@ -543,7 +544,7 @@ namespace Valheim_Diving_Mod
                     return;
 
                 // Bug fix for swimming on land glitch - originally __instance.m_swimDepth > 2.5f
-                if (Player.m_localPlayer.m_swimDepth > 2.5f && (Mathf.Max(0f, Player.m_localPlayer.GetLiquidLevel() - Player.m_localPlayer.transform.position.y) > 2.5f))
+                if (__instance.m_swimDepth > 2.5f && (Mathf.Max(0f, __instance.GetLiquidLevel() - __instance.transform.position.y) > 2.5f))
                 {
                     BetterDiving.is_diving = true;
                     BetterDiving.is_underwater = true;
@@ -575,20 +576,17 @@ namespace Valheim_Diving_Mod
                         BetterDiving.breathDelayTimer = 0;
                     }
 
-                    if (BetterDiving.is_underwater == true && Player.m_localPlayer.GetStandingOnShip() == null)
+                    if (BetterDiving.is_underwater == true && __instance.GetStandingOnShip() == null)
                     {
-                        if (!Player.m_localPlayer.IsDead() && BetterDiving.showYouCanBreatheMsg.Value == true)
+                        if (!__instance.IsDead() && BetterDiving.showYouCanBreatheMsg.Value == true)
                         {
                             __instance.Message(MessageHud.MessageType.Center, "You can breath now.");
                         }
 
                         BetterDiving.toggleDive = false;
-
-                        //DEBUG
-                        //__instance.Message(MessageHud.MessageType.Center, "Cancelled 1");
                         BetterDiving.last_dive_cancel = "PlayerSurfaced";
 
-                        if (!Player.m_localPlayer.IsDead() && BetterDiving.showSurfacingMsg.Value == true)
+                        if (!__instance.IsDead() && BetterDiving.showSurfacingMsg.Value == true)
                         {
                             __instance.Message(MessageHud.MessageType.Center, BetterDiving.surfacingMsg.Value);
                         }
@@ -611,7 +609,7 @@ namespace Valheim_Diving_Mod
                 if (!__instance.IsPlayer() || !BetterDiving.isEnvAllowed() || !Player.m_localPlayer)
                     return;
 
-                if (!Player.m_localPlayer.InWater())
+                if (!__instance.InWater())
                 {
                     __instance.m_swimDepth = 1.6f;
                 }
@@ -619,7 +617,7 @@ namespace Valheim_Diving_Mod
                 bool crouchButtonDown = false;
 
                 // Toggle diving when "Crouch" button is pressed
-                if (ZInput.GetButtonDown("Crouch") && !crouchButtonDown && Player.m_localPlayer.InWater() && !Player.m_localPlayer.IsOnGround() && Player.m_localPlayer.IsSwiming())
+                if (ZInput.GetButtonDown("Crouch") && !crouchButtonDown && __instance.InWater() && !__instance.IsOnGround() && __instance.IsSwiming())
                 {
                     crouchButtonDown = true;
 
@@ -634,11 +632,9 @@ namespace Valheim_Diving_Mod
                         }
                     }
                     //Cancel diving if button is pressed again and still near the surface
-                    else if (BetterDiving.toggleDive == true && Player.m_localPlayer.m_swimDepth <= 2.5f)
+                    else if (BetterDiving.toggleDive == true && __instance.m_swimDepth <= 2.5f)
                     {
                         BetterDiving.toggleDive = false;
-                        //DEBUG
-                        //__instance.Message(MessageHud.MessageType.Center, "Cancelled 2");
                         BetterDiving.last_dive_cancel = "PlayerCancelled";
 
                         if (BetterDiving.showDivingMsg.Value == true)
@@ -653,20 +649,18 @@ namespace Valheim_Diving_Mod
                 }
 
                 //Cancel diving if player is on land
-                if (Player.m_localPlayer.IsOnGround() || !Player.m_localPlayer.IsSwiming() || !Player.m_localPlayer.InWater())
+                if (__instance.IsOnGround() || !__instance.IsSwiming() || !__instance.InWater())
                 {
                     BetterDiving.toggleDive = false;
-                    //DEBUG
-                    //__instance.Message(MessageHud.MessageType.Center, "Cancelled 3");
                     BetterDiving.last_dive_cancel = "PlayerOnLand";
                 }
 
                 // If player can dive and has pressed the dive toggle key
-                if (BetterDiving.toggleDive == true && Player.m_localPlayer.InWater() && !Player.m_localPlayer.IsOnGround() && Player.m_localPlayer.IsSwiming())
+                if (BetterDiving.toggleDive == true && __instance.InWater() && !__instance.IsOnGround() && __instance.IsSwiming())
                 {
 
                     //Diving Skill
-                    if (Player.m_localPlayer && Player.m_localPlayer.m_swimDepth > 2.5f)
+                    if (__instance.IsPlayer() && __instance.m_swimDepth > 2.5f)
                     {
                         BetterDiving.m_diveSkillImproveTimer += Time.deltaTime;
 
@@ -677,8 +671,8 @@ namespace Valheim_Diving_Mod
                         }
                     }
 
-                    BetterDiving.character_pos = Player.m_localPlayer.transform.position;
-                    BetterDiving.char_swim_depth = Player.m_localPlayer.m_swimDepth;
+                    BetterDiving.character_pos = __instance.transform.position;
+                    BetterDiving.char_swim_depth = __instance.m_swimDepth;
 
                     float multiplier = 0f;
                     if (___m_lookDir.y < -0.25)
@@ -708,18 +702,18 @@ namespace Valheim_Diving_Mod
                         }
                         if (BetterDiving.loc_m_diveAaxis == 0)
                         {
-                            if (Player.m_localPlayer.m_swimDepth > 1.6f)
+                            if (__instance.m_swimDepth > 1.6f)
                             {
                                 __instance.m_swimDepth -= multiplier;
                             }
 
-                            if (Player.m_localPlayer.m_swimDepth < 1.6f)
+                            if (__instance.m_swimDepth < 1.6f)
                             {
                                 __instance.m_swimDepth = 1.6f;
                             }
                         }
 
-                        if (Player.m_localPlayer.m_swimDepth > 2.5f) __instance.SetMoveDir(___m_lookDir);
+                        if (__instance.m_swimDepth > 2.5f) __instance.SetMoveDir(___m_lookDir);
                     }
 
                     //Swim up
@@ -750,7 +744,7 @@ namespace Valheim_Diving_Mod
                 }
                 else
                 {
-                    if ((Player.m_localPlayer.IsOnGround() || BetterDiving.is_diving == false) && !BetterDiving.is_take_rest_in_water)
+                    if ((__instance.IsOnGround() || BetterDiving.is_diving == false) && !BetterDiving.is_take_rest_in_water)
                     {
                         __instance.m_swimDepth = 1.6f;
                     }
@@ -815,11 +809,11 @@ namespace Valheim_Diving_Mod
             [HarmonyPrefix]
             public static void Prefix(Player __instance, ref float ___m_stamina, ref float ___m_maxStamina)
             {
-                if (!Player.m_localPlayer)
+                if (!Player.m_localPlayer || __instance != Player.m_localPlayer)
                     return;
 
                 //Remove the breath bar if the player is dead
-                if (Player.m_localPlayer.IsDead())
+                if (__instance.IsDead())
                 {
                     BetterDiving.loc_breath_bar_bg.SetActive(false);
                     BetterDiving.loc_depleted_breath.SetActive(false);
@@ -829,7 +823,7 @@ namespace Valheim_Diving_Mod
 
                 BetterDiving.player_max_stamina = ___m_maxStamina;
 
-                if (Player.m_localPlayer.GetVelocity().magnitude >= 1.0f || BetterDiving.toggleDive == true || !Player.m_localPlayer.InWater() || !Player.m_localPlayer.IsSwiming())
+                if (__instance.GetVelocity().magnitude >= 1.0f || BetterDiving.toggleDive == true || !__instance.InWater() || !__instance.IsSwiming())
                 {
                     BetterDiving.is_take_rest_in_water = false;
                 }
@@ -851,25 +845,25 @@ namespace Valheim_Diving_Mod
                 if (___m_stamina < 0f) ___m_stamina = 0f;
 
 
-                if (BetterDiving.is_swimming != Player.m_localPlayer.IsSwiming()) BetterDiving.is_swimming = Player.m_localPlayer.IsSwiming();
+                if (BetterDiving.is_swimming != __instance.IsSwiming()) BetterDiving.is_swimming = __instance.IsSwiming();
 
                 if (BetterDiving.m_swimStaminaDrainMaxSkill == 0f)
                 {
-                    BetterDiving.m_swimStaminaDrainMaxSkill = Player.m_localPlayer.m_swimStaminaDrainMaxSkill;
+                    BetterDiving.m_swimStaminaDrainMaxSkill = __instance.m_swimStaminaDrainMaxSkill;
                 }
                 if (BetterDiving.m_swimStaminaDrainMinSkill == 0f)
                 {
-                    BetterDiving.m_swimStaminaDrainMinSkill = Player.m_localPlayer.m_swimStaminaDrainMinSkill;
+                    BetterDiving.m_swimStaminaDrainMinSkill = __instance.m_swimStaminaDrainMinSkill;
                 }
                 if (BetterDiving.is_diving && BetterDiving.is_swimming)
                 {
                     if (BetterDiving.m_swimStaminaDrainMaxSkill != BetterDiving.c_swimStaminaDrainMaxSkill.Value)
                     {
-                        Player.m_localPlayer.m_swimStaminaDrainMaxSkill = BetterDiving.c_swimStaminaDrainMaxSkill.Value;
+                        __instance.m_swimStaminaDrainMaxSkill = BetterDiving.c_swimStaminaDrainMaxSkill.Value;
                     }
                     if (BetterDiving.m_swimStaminaDrainMinSkill != BetterDiving.c_swimStaminaDrainMinSkill.Value)
                     {
-                        Player.m_localPlayer.m_swimStaminaDrainMinSkill = BetterDiving.c_swimStaminaDrainMinSkill.Value;
+                        __instance.m_swimStaminaDrainMinSkill = BetterDiving.c_swimStaminaDrainMinSkill.Value;
                     }
 
                     BetterDiving.last_activity = "diving";
@@ -914,9 +908,9 @@ namespace Valheim_Diving_Mod
                 }
                 else
                 {
-                    if (Player.m_localPlayer.IsSwiming())
+                    if (__instance.IsSwiming())
                     {
-                        if (Player.m_localPlayer.GetVelocity().magnitude < 1.0f && !BetterDiving.toggleDive)
+                        if (__instance.GetVelocity().magnitude < 1.0f && !BetterDiving.toggleDive)
                         {
                             //BetterDiving.loc_remining_diveTime = 1f;
 
@@ -927,7 +921,7 @@ namespace Valheim_Diving_Mod
                                 //__instance.Message(MessageHud.MessageType.Center, "Resting enabled.");
                             }
                         }
-                        else if (Player.m_localPlayer.GetVelocity().magnitude >= 1.0f || BetterDiving.toggleDive == true)
+                        else if (__instance.GetVelocity().magnitude >= 1.0f || BetterDiving.toggleDive == true)
                         {
                             BetterDiving.came_from_diving = false;
                             BetterDiving.last_activity = "swimming";
@@ -935,10 +929,10 @@ namespace Valheim_Diving_Mod
                             BetterDiving.is_take_rest_in_water = false;
                             //__instance.Message(MessageHud.MessageType.Center, "Resting disabled.");
                         }
-                        if (Player.m_localPlayer.m_swimStaminaDrainMaxSkill == BetterDiving.c_swimStaminaDrainMaxSkill.Value)
+                        if (__instance.m_swimStaminaDrainMaxSkill == BetterDiving.c_swimStaminaDrainMaxSkill.Value)
                         {
-                            Player.m_localPlayer.m_swimStaminaDrainMaxSkill = BetterDiving.m_swimStaminaDrainMaxSkill;
-                            Player.m_localPlayer.m_swimStaminaDrainMinSkill = BetterDiving.m_swimStaminaDrainMinSkill;
+                            __instance.m_swimStaminaDrainMaxSkill = BetterDiving.m_swimStaminaDrainMaxSkill;
+                            __instance.m_swimStaminaDrainMinSkill = BetterDiving.m_swimStaminaDrainMinSkill;
                         }
                     }
                 }
