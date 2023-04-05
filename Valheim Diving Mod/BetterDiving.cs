@@ -6,6 +6,7 @@ using Jotunn.Configs;
 using Jotunn.Managers;
 using Jotunn.Utils;
 using System;
+using System.CodeDom;
 using System.Collections;
 using System.Reflection;
 using UnityEngine;
@@ -1020,6 +1021,8 @@ namespace BetterDiving
         [HarmonyPrefix]
         public static void Prefix(WaterVolume __instance, ref float ___m_waterTime, ref float[] ___m_normalizedDepth, ref Collider ___m_collider)
         {
+            if (!Player.m_localPlayer) return;
+
             if (GameCamera.instance)
             {
                 BetterDiving.water_level_camera = __instance.GetWaterSurface(new Vector3(GameCamera.instance.transform.position.x, GameCamera.instance.transform.position.y, GameCamera.instance.transform.position.z));
@@ -1091,6 +1094,8 @@ namespace BetterDiving
         [HarmonyPrefix]
         public static void Prefix(WaterVolume __instance)
         {
+            if (__instance == null) return;
+
             BetterDiving.DebugLog("---------------------Section WaterVolume Awake Prefix Start------------------------");
             BetterDiving.DebugLog("water_volume_awake" + " -> " + "true");
             BetterDiving.DebugLog("----------------------Section WaterVolume Awake Prefix End-------------------------");
@@ -1099,6 +1104,8 @@ namespace BetterDiving
         [HarmonyPostfix]
         public static void Postfix(WaterVolume __instance)
         {
+            if (__instance == null) return;
+
             BetterDiving.DebugLog("---------------------Section WaterVolume Awake Postfix Start------------------------");
             BetterDiving.DebugLog("mai_water_mat" + " -> " + (BetterDiving.mai_water_mat == null ? "null" : "not null"));
 
@@ -1137,8 +1144,11 @@ namespace BetterDiving
         }
 
         [HarmonyPrefix]
-        public static void Prefix(GameCamera __instance, Camera ___m_camera, ref bool ___m_waterClipping)
+        //public static void Prefix(GameCamera __instance, Camera ___m_camera, ref bool ___m_waterClipping)
+        public static void Prefix(GameCamera __instance, Camera ___m_camera)
         {
+            if (!Player.m_localPlayer) return;
+
             //Env
             if (BetterDiving.EnvName != EnvMan.instance.GetCurrentEnvironment().m_name)
             {
