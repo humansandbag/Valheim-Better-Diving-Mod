@@ -4,6 +4,8 @@ This is a fork of the Valheim Diving Mod by MLIMG/Easy_Develope. Special thanks 
 Like this mod? Development requires a lot of coffee. Support me by buying me a coffee!  
 [![ko-fi](https://storage.ko-fi.com/cdn/kofi1.png)](https://ko-fi.com/Z8Z6IHWJT)
 
+[Check out my other mods here!](https://valheim.thunderstore.io/package/MainStreetGaming/)
+
 ## How It Works
 - Uses built-in Valheim keybinds, so this mod should work with custom keybinds and controllers as well
 - While swimming, press the crouch button to enable diving mode
@@ -20,6 +22,7 @@ Like this mod? Development requires a lot of coffee. Support me by buying me a c
 - Stamina is depleted faster while fast swimming above water
 - Oxygen is depleted faster rather than stamina when fast swimming underwater
 - Many options can be customized via the config file
+- Config entries under the `Server config` and `Server config - Water` sections are enforced by the server
 
 ## Installation
 
@@ -34,6 +37,15 @@ Like this mod? Development requires a lot of coffee. Support me by buying me a c
 Copy the `MainStreetGaming-BetterDiving` folder to `<GameDirectory>/BepInEx/plugins`.
 
 ## Changelog:
+
+### 1.0.4
+- Multiplayer bug fixes
+- Added server-enforced config syncing
+- Reorganized the config (please delete your old config to avoid confusion)
+- Embedded assets into the binary
+- Added incompatibility checks for blacks7ar.VikingsDoSwim, projjm.improvedswimming, and ch.easy.develope.vh.diving.mod
+- Updated Jotunn and BepInEx references
+- Removed unused and deprecated JotunnLib reference
 
 ### v1.0.3
 - Added feature that allows the player to swim faster by holding the Run button

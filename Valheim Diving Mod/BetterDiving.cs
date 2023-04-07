@@ -17,8 +17,10 @@ namespace BetterDiving
     [BepInPlugin("MainStreetGaming.BetterDiving", "Valheim Better Diving", "1.0.4")]
     [BepInProcess("valheim.exe")]
     [BepInDependency(Jotunn.Main.ModGuid)]
+    [BepInIncompatibility("ch.easy.develope.vh.diving.mod")]
     [BepInIncompatibility("blacks7ar.VikingsDoSwim")]
-    //[NetworkCompatibility(CompatibilityLevel.EveryoneMustHaveMod, VersionStrictness.Minor)]
+    [BepInIncompatibility("projjm.improvedswimming")]
+    //[NetworkCompatibility(CompatibilityLevel.EveryoneMustHaveMod, VersionStrictness.Patch)]
 
     public class BetterDiving : BaseUnityPlugin
     {
@@ -1220,4 +1222,3 @@ namespace BetterDiving
         }
     }
 }
-
