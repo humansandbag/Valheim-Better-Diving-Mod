@@ -14,7 +14,8 @@ Like this mod? Development requires a lot of coffee. Support me by buying me a c
 - While diving, the Left, Right, Up, and Down movement buttons (WASD on keyboard) can be used to swim in each direction as well
 - To return to the surface, look up toward the surface of the water and hold your forward movement button (W on keyboard)
 - Diving mode will be automatically cancelled when the player returns to the surface of the water
-- While on the surface with diving mode disabled, the player will automatically rest and slowly regain stamina when not in motion
+- While on the surface with diving mode disabled, the player will automatically rest and slowly regain stamina when not in motion (based on the players velocity)
+- Large waves can hinder the players ability to rest in water
 - The player will gain a Diving skill while diving
 - The players oxygen bar drain rate is determined by the Diving skill
 - Swim faster by holding the Run button
