@@ -14,7 +14,7 @@ using UnityEngine.UI;
 
 namespace BetterDiving
 {
-    [BepInPlugin("MainStreetGaming.BetterDiving", "Valheim Better Diving", "1.0.4")]
+    [BepInPlugin("MainStreetGaming.BetterDiving", "Valheim Better Diving", "1.0.5")]
     [BepInProcess("valheim.exe")]
     [BepInDependency(Jotunn.Main.ModGuid)]
     [BepInIncompatibility("ch.easy.develope.vh.diving.mod")]
@@ -418,7 +418,7 @@ namespace BetterDiving
             bool crouchButtonDown = false;
 
             // Toggle diving when "Crouch" button is pressed
-            if (ZInput.GetButtonDown("Crouch") && !crouchButtonDown && __instance.InWater() && !__instance.IsOnGround() && __instance.IsSwiming())
+            if ((ZInput.GetButtonDown("Crouch") || ZInput.GetButtonDown("JoyCrouch")) && !crouchButtonDown && __instance.InWater() && !__instance.IsOnGround() && __instance.IsSwiming())
             {
                 crouchButtonDown = true;
 
@@ -444,7 +444,7 @@ namespace BetterDiving
                     }
                 }
             }
-            else if (ZInput.GetButtonUp("Crouch"))
+            else if ((ZInput.GetButtonUp("Crouch") || ZInput.GetButtonUp("JoyCrouch")))
             {
                 crouchButtonDown = false;
             }
@@ -488,7 +488,7 @@ namespace BetterDiving
 
                 if (multiplier > 0.025f) multiplier = 0.025f;
 
-                if (ZInput.GetButton("Forward"))
+                if ((ZInput.GetButton("Forward") || ZInput.GetButton("JoyLStickUp")))
                 {
 
                     if (___m_lookDir.y > -0.25f && ___m_lookDir.y < 0.15f)
@@ -558,7 +558,7 @@ namespace BetterDiving
             float staminaDrainRate = (BetterDiving.swimStaminaDrainRate * staminaDrainFactor * 2f) + 5f;
             BetterDiving.fastSwimStamDrain = staminaDrainRate;
 
-            if (ZInput.GetButton("Run"))
+            if ((ZInput.GetButton("Run") || ZInput.GetButton("JoyRun")))
             {
                 if (!__instance.GetComponent<BetterDivingExtension>().isUnderwater)
                 {
@@ -828,7 +828,7 @@ namespace BetterDiving
                             final_dive_drain = (final_dive_drain * num) / 120f;
                             if (final_dive_drain > final_dive_drain_one_percentage) final_dive_drain = final_dive_drain_one_percentage;
 
-                            if (ZInput.GetButton("Run") && BetterDiving.allowFastSwimming.Value == true)
+                            if ((ZInput.GetButton("Run") || ZInput.GetButton("JoyRun")) && BetterDiving.allowFastSwimming.Value == true)
                             {
                                 final_dive_drain *= 2f;
                             }
