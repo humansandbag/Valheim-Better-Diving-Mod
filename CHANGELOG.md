@@ -2,7 +2,7 @@
 
 ### 1.0.5
 - Bug fixes for gamepads
-- Updated Jotunn and BepinEx references
+- Updated Jotunn reference
 
 ### 1.0.4
 - Multiplayer bug fixes
