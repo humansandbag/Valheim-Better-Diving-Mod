@@ -40,7 +40,7 @@ Like this mod? Development requires a lot of coffee. Support me by buying me a c
 5. Click 'Start Modded'
 
 ### Manual
-Copy `MainStreetGaming.BetterDiving.dll` folder to `<GameDirectory>/BepInEx/plugins`.
+Copy `BetterDiving.dll` folder to `<GameDirectory>/BepInEx/plugins`.
 
 ## Changelog
 [GitHub Changelog](https://github.com/humansandbag/Valheim-Better-Diving-Mod/blob/main/CHANGELOG.md)
