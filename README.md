@@ -6,6 +6,11 @@ Like this mod? Development requires a lot of coffee. Support me by buying me a c
 
 [Check out my other mods here!](https://valheim.thunderstore.io/package/MainStreetGaming/)
 
+## Incompatibilities
+- ch.easy.develope.vh.diving.mod
+- blacks7ar.VikingsDoSwim
+- projjm.improvedswimming
+
 ## How It Works
 - Uses built-in Valheim keybinds and works with custom keybinds and gamepads as well
 - While swimming, press the crouch button to enable diving mode
