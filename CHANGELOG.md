@@ -1,5 +1,9 @@
 ## Changelog:
 
+### 1.0.6
+- Removed the process filter that was preventing the mod from loading on dedicated servers
+- Updated dependencies
+
 ### 1.0.5
 - Bug fixes for gamepads
 - Updated Jotunn reference

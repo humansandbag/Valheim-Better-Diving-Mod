@@ -62,8 +62,8 @@ if($Target.Equals("Release")) {
     $versionNumber = $manifest.version_number
 
     Write-Host "$PackagePath\$TargetAssembly"
-    New-Item -Type Directory -Path "$PackagePath\MainStreetGaming-GooderAutoShield" -Force
-    Copy-Item -Path "$TargetPath\$TargetAssembly" -Destination "$PackagePath\MainStreetGaming-GooderAutoShield\$TargetAssembly" -Force
+    New-Item -Type Directory -Path "$PackagePath\MainStreetGaming-$name" -Force
+    Copy-Item -Path "$TargetPath\$TargetAssembly" -Destination "$PackagePath\MainStreetGaming-$name\$TargetAssembly" -Force
     Copy-Item -Path "README.md" -Destination "$PackagePath\README.md" -Force
     Copy-Item -Path "manifest.json" -Destination "$PackagePath\manifest.json" -Force
     Compress-Archive -Path "$PackagePath\*" -DestinationPath "$TargetPath\$name-$versionNumber.zip" -Force
