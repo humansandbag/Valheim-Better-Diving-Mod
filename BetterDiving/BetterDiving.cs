@@ -47,6 +47,8 @@ namespace BetterDiving
         public static ConfigEntry<bool> showYouCanBreatheMsg;
         public static ConfigEntry<bool> showDivingMsg;
         public static ConfigEntry<string> divingMsg;
+        public static ConfigEntry<string> divingSkill;
+        public static ConfigEntry<string> divingSkillDesc;
         public static ConfigEntry<string> divingCancelledMsg;
         public static ConfigEntry<bool> showSurfacingMsg;
         public static ConfigEntry<string> surfacingMsg;
@@ -162,8 +164,8 @@ namespace BetterDiving
             BetterDiving.DivingSkillType = SkillManager.Instance.AddSkill(new SkillConfig
             {
                 Identifier = "MainStreetGaming.BetterDiving.divingduration.1",
-                Name = "Diving",
-                Description = "Dive duration.",
+                Name = divingSkill.Value,
+                Description = divingSkillDesc.Value,
                 IncreaseStep = 0.25f,
                 Icon = BetterDiving.DivingSprite
             });
@@ -242,6 +244,8 @@ namespace BetterDiving
             showYouCanBreatheMsg = Config.Bind("Local config", "showYouCanBreatheMsg", false, "Whether or not to show the You Can Breathe message. Disable if the surfacing message is enabled.");
             showDivingMsg = Config.Bind("Local config", "showDivingMsg", true, "Whether or not to show messages when triggering/cancelling diving");
             divingMsg = Config.Bind("Local config", "Diving message", "You prepare to dive");
+            divingSkill = Config.Bind("Local config", "Diving Skill", "Diving");
+            divingSkillDesc = Config.Bind("Local config", "Diving Skill Desc", "Dive duration.");
             divingCancelledMsg = Config.Bind("Local config", "Diving cancelled message", "You remain on the surface");
             showSurfacingMsg = Config.Bind("Local config", "showSurfacingMsg", true, "Whether or not to show a message when surfacing");
             surfacingMsg = Config.Bind("Local config", "Surfacing message", "You have surfaced");
