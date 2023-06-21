@@ -154,7 +154,7 @@ namespace BetterDiving.Patches
     ===============================================================================
 
     */
-    [HarmonyPatch(typeof(Character), "FixedUpdate")]
+    [HarmonyPatch(typeof(Character), "CustomFixedUpdate")]
     public class Character_FixedUpdate
     {
         [HarmonyPrefix]
@@ -176,7 +176,7 @@ namespace BetterDiving.Patches
             bool crouchButtonDown = false;
 
             // Toggle diving when "Crouch" button is pressed
-            if ((ZInput.GetButtonDown("Crouch") || ZInput.GetButtonDown("JoyCrouch")) && !crouchButtonDown && __instance.InWater() && !__instance.IsOnGround() && __instance.IsSwiming())
+            if ((ZInput.GetButtonDown("Crouch") || ZInput.GetButtonDown("JoyCrouch")) && !crouchButtonDown && __instance.InWater() && !__instance.IsOnGround() && __instance.IsSwimming())
             {
                 crouchButtonDown = true;
 
@@ -208,14 +208,14 @@ namespace BetterDiving.Patches
             }
 
             //Cancel diving if player is on land
-            if (__instance.IsOnGround() || !__instance.IsSwiming() || !__instance.InWater())
+            if (__instance.IsOnGround() || !__instance.IsSwimming() || !__instance.InWater())
             {
                 __instance.GetComponent<BetterDivingExtension>().toggleDive = false;
                 __instance.GetComponent<BetterDivingExtension>().lastDiveCancel = "PlayerOnLand";
             }
 
             // If player can dive and has pressed the dive toggle key
-            if (__instance.GetComponent<BetterDivingExtension>().toggleDive == true && __instance.InWater() && !__instance.IsOnGround() && __instance.IsSwiming())
+            if (__instance.GetComponent<BetterDivingExtension>().toggleDive == true && __instance.InWater() && !__instance.IsOnGround() && __instance.IsSwimming())
             {
 
                 //Diving Skill
@@ -295,7 +295,7 @@ namespace BetterDiving.Patches
     ===============================================================================
 
     */
-    [HarmonyPatch(typeof(Character), "UpdateSwiming")]
+    [HarmonyPatch(typeof(Character), "UpdateSwimming")]
     class Character_UpdateSwiming_Patch
     {
         static void Prefix(Character __instance)

@@ -126,7 +126,7 @@ namespace BetterDiving.Patches
 
             __instance.GetComponent<BetterDivingExtension>().maxStamina = ___m_maxStamina;
 
-            if (__instance.GetVelocity().magnitude >= 1.0f || __instance.GetComponent<BetterDivingExtension>().toggleDive == true || !__instance.InWater() || !__instance.IsSwiming())
+            if (__instance.GetVelocity().magnitude >= 1.0f || __instance.GetComponent<BetterDivingExtension>().toggleDive == true || !__instance.InWater() || !__instance.IsSwimming())
             {
                 __instance.GetComponent<BetterDivingExtension>().isTakeRestInWater = false;
             }
@@ -156,7 +156,7 @@ namespace BetterDiving.Patches
                 BetterDiving.m_swimStaminaDrainMinSkill = __instance.m_swimStaminaDrainMinSkill;
             }
 
-            if (__instance.GetComponent<BetterDivingExtension>().is_diving && __instance.IsSwiming())
+            if (__instance.GetComponent<BetterDivingExtension>().is_diving && __instance.IsSwimming())
             {
                 if (BetterDiving.m_swimStaminaDrainMaxSkill != BetterDiving.c_swimStaminaDrainMaxSkill.Value)
                 {
@@ -209,7 +209,7 @@ namespace BetterDiving.Patches
             }
             else
             {
-                if (__instance.IsSwiming())
+                if (__instance.IsSwimming())
                 {
                     if (__instance.GetVelocity().magnitude < 1.0f && !__instance.GetComponent<BetterDivingExtension>().toggleDive)
                     {
@@ -288,7 +288,7 @@ namespace BetterDiving.Patches
 
                 //Debug
                 BetterDiving.DebugLog("---------------------Section Debug Start------------------------");
-                BetterDiving.DebugLog("is_swimming" + " -> " + Player.m_localPlayer.IsSwiming());
+                BetterDiving.DebugLog("is_swimming" + " -> " + Player.m_localPlayer.IsSwimming());
                 BetterDiving.DebugLog("m_minDiveSkillImprover" + " -> " + BetterDiving.m_minDiveSkillImprover);
                 BetterDiving.DebugLog("Player_remainingDiveTime" + " -> " + Player.m_localPlayer.GetComponent<BetterDivingExtension>().remainingDiveTime);
                 BetterDiving.DebugLog("loc_m_m_maxDistance" + " -> " + BetterDiving.loc_m_m_maxDistance);
@@ -326,7 +326,7 @@ namespace BetterDiving.Patches
                     Player.m_localPlayer.GetComponent<BetterDivingExtension>().maxStamina = Player.m_localPlayer.GetMaxStamina();
                     Player.m_localPlayer.GetComponent<BetterDivingExtension>().staminaToUpdate = Player.m_localPlayer.GetStamina();
 
-                    if (Player.m_localPlayer.GetComponent<BetterDivingExtension>().is_diving && Player.m_localPlayer.IsSwiming())
+                    if (Player.m_localPlayer.GetComponent<BetterDivingExtension>().is_diving && Player.m_localPlayer.IsSwimming())
                     {
                         BetterDiving.m_minDiveSkillImprover++;
 

@@ -15,7 +15,7 @@ namespace BetterDiving.Patches
     ===============================================================================
 
     */
-    [HarmonyPatch(typeof(WaterVolume), "Update")]
+    [HarmonyPatch(typeof(WaterVolume), "Update2")]
     public class WaterVolume_Update
     {
         public static int RandomDigits(int length)
@@ -28,7 +28,7 @@ namespace BetterDiving.Patches
         }
 
         [HarmonyPrefix]
-        public static void Prefix(WaterVolume __instance, ref float ___m_waterTime, ref float[] ___m_normalizedDepth, ref Collider ___m_collider)
+        public static void Prefix(WaterVolume __instance, ref float[] ___m_normalizedDepth)
         {
             if (!Player.m_localPlayer) return;
 
@@ -40,7 +40,7 @@ namespace BetterDiving.Patches
             {
                 BetterDiving.water_level_player = __instance.GetWaterSurface(new Vector3(Player.m_localPlayer.transform.position.x, Player.m_localPlayer.transform.position.y, Player.m_localPlayer.transform.position.z));
             }
-            if (BetterDiving.loc_cam_pos_y < BetterDiving.water_level_camera && Player.m_localPlayer.IsSwiming())
+            if (BetterDiving.loc_cam_pos_y < BetterDiving.water_level_camera && Player.m_localPlayer.IsSwimming())
             {
                 if (__instance.m_waterSurface.GetComponent<MeshRenderer>().transform.rotation.eulerAngles.y != 180f && BetterDiving.IsEnvAllowed())
                 {

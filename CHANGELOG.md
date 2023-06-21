@@ -1,5 +1,10 @@
 ## Changelog:
 
+### 1.0.7
+- Updates for Valheim patch 0.216.9
+- Updated references
+- Removed outdated BepinEx Nuget package and replaced it with latest version manually
+
 ### 1.0.6
 - Removed the process filter that was preventing the mod from loading on dedicated servers
 - Updated dependencies

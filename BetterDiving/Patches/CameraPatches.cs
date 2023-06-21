@@ -47,7 +47,7 @@ namespace BetterDiving.Patches
             {
                 BetterDiving.EnvName = EnvMan.instance.GetCurrentEnvironment().m_name;
             }
-            if ((Player.m_localPlayer.GetComponent<BetterDivingExtension>().is_diving || Player.m_localPlayer.IsSwiming()) && Player.m_localPlayer.GetComponent<BetterDivingExtension>().isTakeRestInWater == false && BetterDiving.IsEnvAllowed())
+            if ((Player.m_localPlayer.GetComponent<BetterDivingExtension>().is_diving || Player.m_localPlayer.IsSwimming()) && Player.m_localPlayer.GetComponent<BetterDivingExtension>().isTakeRestInWater == false && BetterDiving.IsEnvAllowed())
             {
                 __instance.m_minWaterDistance = -5000f;
             }
@@ -60,7 +60,7 @@ namespace BetterDiving.Patches
 
             BetterDiving.loc_cam_pos_y = ___m_camera.gameObject.transform.position.y;
 
-            if (___m_camera.gameObject.transform.position.y < BetterDiving.water_level_camera && (Player.m_localPlayer.IsSwiming() || Player.m_localPlayer.GetComponent<BetterDivingExtension>().is_diving) && BetterDiving.IsEnvAllowed())
+            if (___m_camera.gameObject.transform.position.y < BetterDiving.water_level_camera && (Player.m_localPlayer.IsSwimming() || Player.m_localPlayer.GetComponent<BetterDivingExtension>().is_diving) && BetterDiving.IsEnvAllowed())
             {
                 if (__instance.m_minWaterDistance != -5000f) __instance.m_minWaterDistance = -5000f;
 
