@@ -331,7 +331,7 @@ namespace BetterDiving.Patches
                 if (!__instance.GetComponent<BetterDivingExtension>().isUnderwater)
                 {
                     float staminaCost = Time.deltaTime * staminaDrainRate;
-                    __instance.UseStamina(staminaCost);
+                    __instance.UseStamina(staminaCost, false);
                 }
                 __instance.m_swimSpeed = BetterDiving.fastSwimSpeed;
             }

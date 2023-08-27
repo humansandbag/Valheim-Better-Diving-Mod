@@ -1,5 +1,8 @@
 ## Changelog:
 
+### 1.0.8
+- Updates for Valheim Hildir's Request
+
 ### 1.0.7
 - Updates for Valheim patch 0.216.9
 - Updated references

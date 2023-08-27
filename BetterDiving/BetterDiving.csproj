@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\packages\JotunnLib.2.12.1\build\JotunnLib.props" Condition="Exists('..\packages\JotunnLib.2.12.1\build\JotunnLib.props')" />
+  <Import Project="..\packages\JotunnLib.2.12.6\build\JotunnLib.props" Condition="Exists('..\packages\JotunnLib.2.12.6\build\JotunnLib.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -65,8 +65,8 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\BepInEx\HarmonyXInterop.dll</HintPath>
     </Reference>
-    <Reference Include="Jotunn, Version=2.12.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\JotunnLib.2.12.1\lib\net462\Jotunn.dll</HintPath>
+    <Reference Include="Jotunn, Version=2.12.6.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\JotunnLib.2.12.6\lib\net462\Jotunn.dll</HintPath>
     </Reference>
     <Reference Include="Mono.Cecil, Version=0.11.5.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -87,25 +87,23 @@
     <Reference Include="MonoMod, Version=22.7.31.1, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\MonoMod.22.7.31.1\lib\net452\MonoMod.exe</HintPath>
     </Reference>
-    <Reference Include="MonoMod.Backports, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\MonoMod.Backports.1.0.0\lib\net452\MonoMod.Backports.dll</HintPath>
+    <Reference Include="MonoMod.Backports, Version=1.0.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MonoMod.Backports.1.0.1\lib\net452\MonoMod.Backports.dll</HintPath>
     </Reference>
-    <Reference Include="MonoMod.Core, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\MonoMod.Core.1.0.0\lib\net452\MonoMod.Core.dll</HintPath>
+    <Reference Include="MonoMod.Core, Version=1.0.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MonoMod.Core.1.0.1\lib\net452\MonoMod.Core.dll</HintPath>
     </Reference>
     <Reference Include="MonoMod.Iced, Version=1.17.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\MonoMod.Core.1.0.0\lib\net452\MonoMod.Iced.dll</HintPath>
+      <HintPath>..\packages\MonoMod.Core.1.0.1\lib\net452\MonoMod.Iced.dll</HintPath>
     </Reference>
     <Reference Include="MonoMod.ILHelpers, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\MonoMod.ILHelpers.1.0.0\lib\net452\MonoMod.ILHelpers.dll</HintPath>
     </Reference>
-    <Reference Include="MonoMod.RuntimeDetour, Version=25.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\BepInEx\MonoMod.RuntimeDetour.dll</HintPath>
+    <Reference Include="MonoMod.RuntimeDetour, Version=25.0.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MonoMod.RuntimeDetour.25.0.2\lib\net452\MonoMod.RuntimeDetour.dll</HintPath>
     </Reference>
-    <Reference Include="MonoMod.Utils, Version=25.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\BepInEx\MonoMod.Utils.dll</HintPath>
+    <Reference Include="MonoMod.Utils, Version=25.0.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MonoMod.Utils.25.0.3\lib\net452\MonoMod.Utils.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -154,6 +152,6 @@
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\JotunnLib.2.12.1\build\JotunnLib.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\JotunnLib.2.12.1\build\JotunnLib.props'))" />
+    <Error Condition="!Exists('..\packages\JotunnLib.2.12.6\build\JotunnLib.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\JotunnLib.2.12.6\build\JotunnLib.props'))" />
   </Target>
 </Project>
