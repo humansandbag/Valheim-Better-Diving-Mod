@@ -1,10 +1,10 @@
 {
   "name": "BetterDiving",
-  "version_number": "1.0.8",
+  "version_number": "1.0.9",
   "website_url": "https://github.com/humansandbag/Valheim-Better-Diving-Mod",
   "description": "Easy_Develope's Valheim Diving mod updated with bug fixes and new features",
   "dependencies": [
-    "denikson-BepInExPack_Valheim-5.4.2105",
-    "ValheimModding-Jotunn-2.12.6"
+    "denikson-BepInExPack_Valheim-5.4.2202",
+    "ValheimModding-Jotunn-2.16.2"
   ]
 }
