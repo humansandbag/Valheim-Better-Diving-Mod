@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.UI;
 
 namespace BetterDiving.Patches
@@ -288,6 +289,7 @@ namespace BetterDiving.Patches
 
                 //Debug
                 BetterDiving.DebugLog("---------------------Section Debug Start------------------------");
+                BetterDiving.DebugLog("Rendering API" + " -> " + BetterDiving.graphicsDeviceType);
                 BetterDiving.DebugLog("is_swimming" + " -> " + Player.m_localPlayer.IsSwimming());
                 BetterDiving.DebugLog("m_minDiveSkillImprover" + " -> " + BetterDiving.m_minDiveSkillImprover);
                 BetterDiving.DebugLog("Player_remainingDiveTime" + " -> " + Player.m_localPlayer.GetComponent<BetterDivingExtension>().remainingDiveTime);

@@ -1,5 +1,8 @@
 ## Changelog:
 
+### 1.0.9
+- Implemented temporary workaround for Vulkan water shader bug
+
 ### 1.0.8
 - Updates for Valheim Hildir's Request
 

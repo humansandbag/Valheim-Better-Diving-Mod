@@ -108,12 +108,12 @@ namespace BetterDiving.Patches
 
                     // Delay removal of the breathe bar for a number of seconds
                     if (BetterDiving.breathDelayTimer >= BetterDiving.breathBarRemoveDelay)
-                    {
+                    {                       
                         BetterDiving.loc_breath_bar_bg.SetActive(false);
                         BetterDiving.loc_depleted_breath.SetActive(false);
                         BetterDiving.loc_breath_bar.SetActive(false);
                         BetterDiving.loc_breathe_overlay.SetActive(false);
-                        BetterDiving.breathDelayTimer = 0;
+                        BetterDiving.breathDelayTimer = 0;                       
                     }
                 }
                 else

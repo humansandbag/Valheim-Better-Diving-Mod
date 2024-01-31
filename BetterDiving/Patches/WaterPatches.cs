@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 using System;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace BetterDiving.Patches
 {
@@ -45,8 +46,17 @@ namespace BetterDiving.Patches
                 if (__instance.m_waterSurface.GetComponent<MeshRenderer>().transform.rotation.eulerAngles.y != 180f && BetterDiving.IsEnvAllowed())
                 {
                     __instance.m_waterSurface.transform.Rotate(180f, 0f, 0f);
-                    __instance.m_waterSurface.material = BetterDiving.water_mat;
-                    __instance.m_waterSurface.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.TwoSided;
+
+                    // Temporarly fix for shader bug when using Vulkan
+                    if (BetterDiving.graphicsDeviceType.Equals("Vulkan", System.StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Don't apply the material
+                    }
+                    else
+                    {
+                        __instance.m_waterSurface.material = BetterDiving.water_mat;
+                    }
+                        __instance.m_waterSurface.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.TwoSided;
 
                     if (__instance.m_forceDepth >= 0f)
                     {

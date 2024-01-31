@@ -32,7 +32,7 @@ namespace BetterDiving
     {
         public const string PluginGUID = "MainStreetGaming.BetterDiving";
         public const string PluginName = "BetterDiving";
-        public const string PluginVersion = "1.0.7";
+        public const string PluginVersion = "1.0.9";
 
         // Use this class to add your own localization to the game
         // https://valheim-modding.github.io/Jotunn/tutorials/localization.html
@@ -127,6 +127,9 @@ namespace BetterDiving
         public static float fastSwimSpeed;
         public static float fastSwimStamDrain;
 
+        //Graphics
+        public static string graphicsDeviceType;
+
         public System.Collections.IEnumerator Start()
         {
             DebugLog("Better Diving Mod: Ienumerator start!");
@@ -194,6 +197,8 @@ namespace BetterDiving
             {
                 Debug.Log(PluginName + ": " + configGreeting.Value);
             }
+
+            graphicsDeviceType = SystemInfo.graphicsDeviceType.ToString();
         }
 
         /*
