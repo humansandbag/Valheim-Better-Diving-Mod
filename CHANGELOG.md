@@ -1,5 +1,8 @@
 ## Changelog:
 
+### 1.1.0
+- Updates for Ashlands compatibility
+
 ### 1.0.9
 - Implemented temporary workaround for Vulkan water shader bug
 

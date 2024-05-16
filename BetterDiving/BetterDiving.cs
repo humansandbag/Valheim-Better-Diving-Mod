@@ -32,7 +32,7 @@ namespace BetterDiving
     {
         public const string PluginGUID = "MainStreetGaming.BetterDiving";
         public const string PluginName = "BetterDiving";
-        public const string PluginVersion = "1.0.9";
+        public const string PluginVersion = "1.1.0";
 
         // Use this class to add your own localization to the game
         // https://valheim-modding.github.io/Jotunn/tutorials/localization.html

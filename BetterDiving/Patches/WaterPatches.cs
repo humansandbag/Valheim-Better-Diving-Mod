@@ -16,7 +16,7 @@ namespace BetterDiving.Patches
     ===============================================================================
 
     */
-    [HarmonyPatch(typeof(WaterVolume), "Update2")]
+    [HarmonyPatch(typeof(WaterVolume), "UpdateMaterials")]
     public class WaterVolume_Update
     {
         public static int RandomDigits(int length)

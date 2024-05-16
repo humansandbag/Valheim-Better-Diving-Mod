@@ -68,7 +68,7 @@ namespace BetterDiving.Patches
 
                 EnvSetup curr_env = EnvMan.instance.GetCurrentEnvironment();
                 Color water_color;
-                if (EnvMan.instance.IsNight())
+                if (EnvMan.IsNight())
                 {
                     water_color = curr_env.m_fogColorNight;
                 }
