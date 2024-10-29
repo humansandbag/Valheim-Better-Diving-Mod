@@ -1,5 +1,8 @@
 ## Changelog:
 
+### 1.1.1
+- Updates for The Bog Witch compatibility
+
 ### 1.1.0
 - Updates for Ashlands compatibility
 

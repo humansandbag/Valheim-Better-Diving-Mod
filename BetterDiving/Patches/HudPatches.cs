@@ -21,16 +21,13 @@ namespace BetterDiving.Patches
     public class Hud_Update
     {
         [HarmonyPrefix]
-        public static void Prefix(Hud __instance)
+        public static void Prefix()
         {
-            if (BetterDiving.has_created_breathe_bar == false)
+           if (BetterDiving.has_created_breathe_bar == false)
             {
                 if (Player.m_localPlayer != null && Hud.instance != null && Hud.instance.m_pieceSelectionWindow != null)
                 {
-                    Vector3 position = new Vector3(0, 0, 0);
-                    Transform transform = Hud.instance.transform;
-
-                    var panel = GUIManager.Instance.CreateWoodpanel(
+                    var breathPanel = GUIManager.Instance.CreateWoodpanel(
                         parent: Hud.instance.transform,
                         anchorMin: new Vector2(0.5f, 0.5f),
                         anchorMax: new Vector2(0.5f, 0.5f),
@@ -39,12 +36,10 @@ namespace BetterDiving.Patches
                         height: 124f,
                         draggable: false);
 
-                    BetterDiving.loc_breath_bar_bg = panel;
+                    BetterDiving.loc_breath_bar_bg = breathPanel;
 
                     BetterDiving.loc_breath_bar_bg.name = "BreathBarBG";
                     BetterDiving.loc_breath_bar_bg.GetComponent<Image>().sprite = BetterDiving.breath_bg_sprite;
-
-                    BetterDiving.loc_breath_bar_bg = panel;
 
                     // Create depleted breath bar
                     var depleted_breath_progress = GUIManager.Instance.CreateWoodpanel(
