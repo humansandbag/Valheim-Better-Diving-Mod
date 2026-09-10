@@ -1,5 +1,8 @@
 ## Changelog:
 
+### 1.1.2
+- Updates for Deep North compatibility
+
 ### 1.1.1
 - Updates for The Bog Witch compatibility
 
